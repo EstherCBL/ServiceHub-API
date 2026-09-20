@@ -1,0 +1,21 @@
+# PostgreSQL local para desenvolvimento. As credenciais vêm do arquivo .env (veja .env.example).
+services:
+  postgres:
+    image: postgres:16
+    container_name: servicehub-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-servicehub}
+      POSTGRES_USER: ${DB_USER:-servicehub}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no arquivo .env}
+    ports:
+      - "5432:5432"
+    volumes:
+      - servicehub-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-servicehub} -d ${DB_NAME:-servicehub}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  servicehub-pgdata:

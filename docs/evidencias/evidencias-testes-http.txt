@@ -1,0 +1,638 @@
+### [POST-01] Cria serviço válido (com acentos, com descrição)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: (arquivo post-valido.json) {"nome":"Instalação de ar-condicionado","descricao":"Instalação de split de até 12.000 BTUs, com suporte e tubulação de até 3 metros","categoria":"Climatização","preco":350.00,"duracaoMinutos":120}
+RES : HTTP 201 | 414ms | esperado=201 | PASS
+      Content-Type: application/json
+      Location: http://localhost:8080/api/v1/servicos/1
+RESP: {"id":1,"nome":"Instalação de ar-condicionado","descricao":"Instalação de split de até 12.000 BTUs, com suporte e tubulação de até 3 metros","categoria":"Climatização","preco":350.00,"duracaoMinutos":120,"criadoEm":"2026-09-20T16:02:39.402492Z","atualizadoEm":"2026-09-20T16:02:39.402492Z"}
+
+### [POST-02] Cria serviço válido sem descrição (campo opcional)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Limpeza residencial","categoria":"Limpeza","preco":120.50,"duracaoMinutos":180}
+RES : HTTP 201 | 7ms | esperado=201 | PASS
+      Content-Type: application/json
+      Location: http://localhost:8080/api/v1/servicos/2
+RESP: {"id":2,"nome":"Limpeza residencial","descricao":null,"categoria":"Limpeza","preco":120.50,"duracaoMinutos":180,"criadoEm":"2026-09-20T16:02:42.256015Z","atualizadoEm":"2026-09-20T16:02:42.256015Z"}
+
+### [POST-03] Cria serviço com espaços nas bordas de nome/categoria (esperado: strip)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: (arquivo post-bordas.json) {"nome":"  Pintura de parede  ","categoria":"  Reformas  ","preco":90.00,"duracaoMinutos":240}
+RES : HTTP 201 | 9ms | esperado=201 | PASS
+      Content-Type: application/json
+      Location: http://localhost:8080/api/v1/servicos/3
+RESP: {"id":3,"nome":"Pintura de parede","descricao":null,"categoria":"Reformas","preco":90.00,"duracaoMinutos":240,"criadoEm":"2026-09-20T16:02:44.400311Z","atualizadoEm":"2026-09-20T16:02:44.400311Z"}
+
+### [POST-04] Corpo vazio {} (todos os obrigatórios ausentes)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {}
+RES : HTTP 400 | 22ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"nome","mensagem":"O nome é obrigatório"},{"campo":"preco","mensagem":"O preço é obrigatório"},{"campo":"categoria","mensagem":"A categoria é obrigatória"},{"campo":"duracaoMinutos","mensagem":"A duração estimada é obrigatória"}]}
+
+### [POST-05] Sem corpo, Content-Type JSON
+REQ : POST /api/v1/servicos
+CT  : application/json
+RES : HTTP 400 | 8ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos"}
+
+### [POST-06] Com corpo, sem Content-Type
+REQ : POST /api/v1/servicos
+BODY: {"nome":"Teste","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 415 | 6ms | esperado=415 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Tipo de conteúdo não suportado","status":415,"detail":"O tipo de conteúdo da requisição não é suportado. Use application/json","instance":"/api/v1/servicos"}
+
+### [POST-07] Content-Type text/plain
+REQ : POST /api/v1/servicos
+CT  : text/plain
+BODY: {"nome":"Teste","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 415 | 4ms | esperado=415 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Tipo de conteúdo não suportado","status":415,"detail":"O tipo de conteúdo da requisição não é suportado. Use application/json","instance":"/api/v1/servicos"}
+
+### [POST-08] JSON malformado (chave sem fechar)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"X","preco":10,
+RES : HTTP 400 | 6ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos"}
+
+### [POST-09] JSON malformado (texto puro)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: isto nao e json
+RES : HTTP 400 | 5ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos"}
+
+### [POST-10] preco = 0
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"X","preco":0,"duracaoMinutos":10}
+RES : HTTP 400 | 5ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"preco","mensagem":"O preço deve ser maior que zero"}]}
+
+### [POST-11] preco negativo
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"X","preco":-5,"duracaoMinutos":10}
+RES : HTTP 400 | 28ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"preco","mensagem":"O preço deve ser maior que zero"}]}
+
+### [POST-12] preco com 3 casas decimais
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"X","preco":10.123,"duracaoMinutos":10}
+RES : HTTP 400 | 5ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"preco","mensagem":"O preço deve ter no máximo 2 casas decimais"}]}
+
+### [POST-13] preco acima do máximo (100000000)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"X","preco":100000000,"duracaoMinutos":10}
+RES : HTTP 400 | 5ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"preco","mensagem":"O preço deve ter no máximo 2 casas decimais"},{"campo":"preco","mensagem":"O preço excede o valor máximo permitido"}]}
+
+### [POST-14] preco como string não numérica
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"X","preco":"abc","duracaoMinutos":10}
+RES : HTTP 400 | 5ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos"}
+
+### [POST-15] duracaoMinutos = 0
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"X","preco":10,"duracaoMinutos":0}
+RES : HTTP 400 | 4ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"duracaoMinutos","mensagem":"A duração estimada deve ser de pelo menos 1 minuto"}]}
+
+### [POST-16] duracaoMinutos acima do máximo (100001)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"X","preco":10,"duracaoMinutos":100001}
+RES : HTTP 400 | 6ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"duracaoMinutos","mensagem":"A duração estimada excede o valor máximo permitido"}]}
+
+### [POST-17] duracaoMinutos como string não numérica
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"X","preco":10,"duracaoMinutos":"muito"}
+RES : HTTP 400 | 4ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos"}
+
+### [POST-18] duracaoMinutos decimal (1.5) - comportamento do Jackson
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste decimal","categoria":"X","preco":10,"duracaoMinutos":1.5}
+RES : HTTP 201 | 8ms | esperado=400/201 | PASS
+      Content-Type: application/json
+      Location: http://localhost:8080/api/v1/servicos/4
+RESP: {"id":4,"nome":"Teste decimal","descricao":null,"categoria":"X","preco":10,"duracaoMinutos":1,"criadoEm":"2026-09-20T16:03:15.126750Z","atualizadoEm":"2026-09-20T16:03:15.126750Z"}
+
+### [POST-19] nome vazio
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 400 | 9ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"nome","mensagem":"O nome deve ter entre 3 e 100 caracteres"},{"campo":"nome","mensagem":"O nome é obrigatório"}]}
+
+### [POST-20] nome só com espaços
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"     ","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 400 | 4ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"nome","mensagem":"O nome é obrigatório"}]}
+
+### [POST-21] nome com 2 caracteres (mínimo 3)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"ab","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 400 | 4ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"nome","mensagem":"O nome deve ter entre 3 e 100 caracteres"}]}
+
+### [POST-22] nome com 101 caracteres (máximo 100)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 400 | 6ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"nome","mensagem":"O nome deve ter entre 3 e 100 caracteres"}]}
+
+### [POST-23] categoria vazia
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"","preco":10,"duracaoMinutos":10}
+RES : HTTP 400 | 4ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"categoria","mensagem":"A categoria é obrigatória"}]}
+
+### [POST-24] categoria com 61 caracteres (máximo 60)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","preco":10,"duracaoMinutos":10}
+RES : HTTP 400 | 5ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"categoria","mensagem":"A categoria deve ter no máximo 60 caracteres"}]}
+
+### [POST-25] descricao com 501 caracteres (máximo 500)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Teste","descricao":"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+RES : HTTP 400 | 4ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"descricao","mensagem":"A descrição deve ter no máximo 500 caracteres"}]}
+
+### [POST-26] campos obrigatórios explicitamente null
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":null,"categoria":null,"preco":null,"duracaoMinutos":null}
+RES : HTTP 400 | 34ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"categoria","mensagem":"A categoria é obrigatória"},{"campo":"nome","mensagem":"O nome é obrigatório"},{"campo":"duracaoMinutos","mensagem":"A duração estimada é obrigatória"},{"campo":"preco","mensagem":"O preço é obrigatório"}]}
+
+### [POST-27] Limite: nome com 100 caracteres
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","categoria":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","descricao":"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+RES : HTTP 201 | 24ms | esperado=201 | PASS
+      Content-Type: application/json
+      Location: http://localhost:8080/api/v1/servicos/5
+RESP: {"id":5,"nome":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","descricao":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","categoria":"cccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+### [POST-28] Limite mínimo: preco 0.01 e duração 1, nome 3 caracteres
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"abc","categoria":"X","preco":0.01,"duracaoMinutos":1}
+RES : HTTP 201 | 9ms | esperado=201 | PASS
+      Content-Type: application/json
+      Location: http://localhost:8080/api/v1/servicos/6
+RESP: {"id":6,"nome":"abc","descricao":null,"categoria":"X","preco":0.01,"duracaoMinutos":1,"criadoEm":"2026-09-20T16:03:40.047404Z","atualizadoEm":"2026-09-20T16:03:40.047404Z"}
+
+### [POST-29] Propriedade desconhecida e id no corpo (devem ser ignorados)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"id":9999,"campoExtra":"x","nome":"Com id no corpo","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 201 | 18ms | esperado=201 | PASS
+      Content-Type: application/json
+      Location: http://localhost:8080/api/v1/servicos/7
+RESP: {"id":7,"nome":"Com id no corpo","descricao":null,"categoria":"X","preco":10,"duracaoMinutos":10,"criadoEm":"2026-09-20T16:03:43.008086Z","atualizadoEm":"2026-09-20T16:03:43.008086Z"}
+
+### [POST-30] Nome duplicado (não há regra de unicidade)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Limpeza residencial","categoria":"Limpeza","preco":120.50,"duracaoMinutos":180}
+RES : HTTP 201 | 6ms | esperado=201 | PASS
+      Content-Type: application/json
+      Location: http://localhost:8080/api/v1/servicos/8
+RESP: {"id":8,"nome":"Limpeza residencial","descricao":null,"categoria":"Limpeza","preco":120.50,"duracaoMinutos":180,"criadoEm":"2026-09-20T16:03:45.240324Z","atualizadoEm":"2026-09-20T16:03:45.240324Z"}
+
+### [POST-31] Bypass de @Size(min=3) via strip: nome '  ab ' (5 chars antes do strip)
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"  ab ","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 201 | 6ms | esperado=400/201 | PASS
+      Content-Type: application/json
+      Location: http://localhost:8080/api/v1/servicos/9
+RESP: {"id":9,"nome":"ab","descricao":null,"categoria":"X","preco":10,"duracaoMinutos":10,"criadoEm":"2026-09-20T16:03:47.075416Z","atualizadoEm":"2026-09-20T16:03:47.075416Z"}
+
+### [GET-01] Listar todos os serviços
+REQ : GET /api/v1/servicos
+RES : HTTP 200 | 156ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: [{"id":1,"nome":"Instalação de ar-condicionado","descricao":"Instalação de split de até 12.000 BTUs, com suporte e tubulação de até 3 metros","categoria":"Climatização","preco":350.00,"duracaoMinutos":120,"criadoEm":"2026-09-20T16:02:39.402492Z","atualizadoEm":"2026-09-20T16:02:39.402492Z"},{"id":2,"nome":"Limpeza residencial","descricao":null,"categoria":"Limpeza","preco":120.50,"duracaoMinutos":180,"criadoEm":"2026-09-20T16:02:42.256015Z","atualizadoEm":"2026-09-20T16:02:42.256015Z"},{"id":3,"nome":"Pintura de parede","descricao":null,"categoria":"Reformas","preco":90.00,"duracaoMinutos":240,"criadoEm":"2026-09-20T16:02:44.400311Z","atualizadoEm":"2026-09-20T16:02:44.400311Z"},{"
+
+### [GET-02] Buscar por ID existente (id=1)
+REQ : GET /api/v1/servicos/1
+RES : HTTP 200 | 16ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: {"id":1,"nome":"Instalação de ar-condicionado","descricao":"Instalação de split de até 12.000 BTUs, com suporte e tubulação de até 3 metros","categoria":"Climatização","preco":350.00,"duracaoMinutos":120,"criadoEm":"2026-09-20T16:02:39.402492Z","atualizadoEm":"2026-09-20T16:02:39.402492Z"}
+
+### [GET-03] Buscar por ID existente (id=3, valores com strip)
+REQ : GET /api/v1/servicos/3
+RES : HTTP 200 | 6ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: {"id":3,"nome":"Pintura de parede","descricao":null,"categoria":"Reformas","preco":90.00,"duracaoMinutos":240,"criadoEm":"2026-09-20T16:02:44.400311Z","atualizadoEm":"2026-09-20T16:02:44.400311Z"}
+
+### [GET-04] Buscar id=4 (preco enviado como 10 - conferir escala)
+REQ : GET /api/v1/servicos/4
+RES : HTTP 200 | 5ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: {"id":4,"nome":"Teste decimal","descricao":null,"categoria":"X","preco":10.00,"duracaoMinutos":1,"criadoEm":"2026-09-20T16:03:15.126750Z","atualizadoEm":"2026-09-20T16:03:15.126750Z"}
+
+### [GET-05] ID inexistente (99999)
+REQ : GET /api/v1/servicos/99999
+RES : HTTP 404 | 7ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 99999 não encontrado","instance":"/api/v1/servicos/99999"}
+
+### [GET-06] ID não numérico (abc)
+REQ : GET /api/v1/servicos/abc
+RES : HTTP 400 | 6ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Parâmetro inválido","status":400,"detail":"O valor informado para o parâmetro 'id' é inválido","instance":"/api/v1/servicos/abc"}
+
+### [GET-07] ID zero (0)
+REQ : GET /api/v1/servicos/0
+RES : HTTP 404 | 20ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 0 não encontrado","instance":"/api/v1/servicos/0"}
+
+### [GET-08] ID negativo (-1)
+REQ : GET /api/v1/servicos/-1
+RES : HTTP 404 | 4ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id -1 não encontrado","instance":"/api/v1/servicos/-1"}
+
+### [GET-09] ID acima de Long (99999999999999999999)
+REQ : GET /api/v1/servicos/99999999999999999999
+RES : HTTP 400 | 3ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Parâmetro inválido","status":400,"detail":"O valor informado para o parâmetro 'id' é inválido","instance":"/api/v1/servicos/99999999999999999999"}
+
+### [GET-10] ID decimal (1.5)
+REQ : GET /api/v1/servicos/1.5
+RES : HTTP 400 | 20ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Parâmetro inválido","status":400,"detail":"O valor informado para o parâmetro 'id' é inválido","instance":"/api/v1/servicos/1.5"}
+
+### [GET-11] Parâmetros de paginação/filtro (page=0&size=2&categoria=Limpeza) - não implementados, devem ser ignorados
+REQ : GET /api/v1/servicos?page=0&size=2&categoria=Limpeza
+RES : HTTP 200 | 9ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: [{"id":1,"nome":"Instalação de ar-condicionado","descricao":"Instalação de split de até 12.000 BTUs, com suporte e tubulação de até 3 metros","categoria":"Climatização","preco":350.00,"duracaoMinutos":120,"criadoEm":"2026-09-20T16:02:39.402492Z","atualizadoEm":"2026-09-20T16:02:39.402492Z"},{"id":2,"nome":"Limpeza residencial","descricao":null,"categoria":"Limpeza","preco":120.50,"duracaoMinutos":180,"criadoEm":"2026-09-20T16:02:42.256015Z","atualizadoEm":"2026-09-20T16:02:42.256015Z"},{"id":3,"nome":"Pintura de parede","descricao":null,"categoria":"Reformas","preco":90.00,"duracaoMinutos":240,"criadoEm":"2026-09-20T16:02:44.400311Z","atualizadoEm":"2026-09-20T16:02:44.400311Z"},{"
+
+### [GET-12] Barra final na coleção (/servicos/)
+REQ : GET /api/v1/servicos/
+RES : HTTP 404 | 13ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"A rota solicitada não existe","instance":"/api/v1/servicos/"}
+
+### [GET-13] Accept: application/xml (API só produz JSON)
+REQ : GET /api/v1/servicos/1
+HDR : Accept: application/xml
+RES : HTTP 406 | 6ms | esperado=406 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Not Acceptable","status":406,"detail":"Acceptable representations: [application/json].","instance":"/api/v1/servicos/1"}
+
+### [GET-14] HEAD na coleção
+REQ : HEAD /api/v1/servicos
+RES : HTTP 200 | 7ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: HTTP/1.1 200 Content-Type: application/jsonDate: Sun, 20 Sep 2026 16:04:31 GMT
+
+### [GET-15] OPTIONS na coleção
+REQ : OPTIONS /api/v1/servicos
+RES : HTTP 200 | 3ms | esperado=200 | PASS
+      Allow: POST,GET,HEAD,OPTIONS
+RESP: (sem corpo)
+
+### [GET-16] GET com Origin (sem CORS configurado) - verifica ausência de Access-Control-Allow-Origin
+REQ : GET /api/v1/servicos/1
+HDR : Origin: http://exemplo.com
+RES : HTTP 200 | 9ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: {"id":1,"nome":"Instalação de ar-condicionado","descricao":"Instalação de split de até 12.000 BTUs, com suporte e tubulação de até 3 metros","categoria":"Climatização","preco":350.00,"duracaoMinutos":120,"criadoEm":"2026-09-20T16:02:39.402492Z","atualizadoEm":"2026-09-20T16:02:39.402492Z"}
+
+### [GET-17] Preflight CORS (OPTIONS + Access-Control-Request-Method) sem CORS configurado
+REQ : OPTIONS /api/v1/servicos
+HDR : Origin: http://exemplo.com
+HDR : Access-Control-Request-Method: POST
+RES : HTTP 403 | 10ms | esperado=403 | PASS
+RESP: Invalid CORS request
+
+### [PUT-01] Atualiza serviço 1 com corpo completo válido
+REQ : PUT /api/v1/servicos/1
+CT  : application/json
+BODY: (arquivo put-valido.json) {"nome":"Instalação de split 18.000 BTUs","descricao":"Instalação completa com tubulação de até 5 metros","categoria":"Climatização","preco":480.00,"duracaoMinutos":150}
+RES : HTTP 200 | 17ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: {"id":1,"nome":"Instalação de split 18.000 BTUs","descricao":"Instalação completa com tubulação de até 5 metros","categoria":"Climatização","preco":480.00,"duracaoMinutos":150,"criadoEm":"2026-09-20T16:02:39.402492Z","atualizadoEm":"2026-09-20T16:05:05.871330Z"}
+
+### [PUT-02] Reconsulta GET /1 após o PUT (persistência)
+REQ : GET /api/v1/servicos/1
+RES : HTTP 200 | 5ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: {"id":1,"nome":"Instalação de split 18.000 BTUs","descricao":"Instalação completa com tubulação de até 5 metros","categoria":"Climatização","preco":480.00,"duracaoMinutos":150,"criadoEm":"2026-09-20T16:02:39.402492Z","atualizadoEm":"2026-09-20T16:05:05.871330Z"}
+
+### [PUT-03] PUT sem descrição (semântica PUT: descrição é limpa)
+REQ : PUT /api/v1/servicos/1
+CT  : application/json
+BODY: (arquivo put-sem-descricao.json) {"nome":"Instalação de split 18.000 BTUs","categoria":"Climatização","preco":480.00,"duracaoMinutos":150}
+RES : HTTP 200 | 12ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: {"id":1,"nome":"Instalação de split 18.000 BTUs","descricao":null,"categoria":"Climatização","preco":480.00,"duracaoMinutos":150,"criadoEm":"2026-09-20T16:02:39.402492Z","atualizadoEm":"2026-09-20T16:05:09.228735Z"}
+
+### [PUT-04] PUT em ID inexistente com corpo válido
+REQ : PUT /api/v1/servicos/99999
+CT  : application/json
+BODY: (arquivo put-valido.json) {"nome":"Instalação de split 18.000 BTUs","descricao":"Instalação completa com tubulação de até 5 metros","categoria":"Climatização","preco":480.00,"duracaoMinutos":150}
+RES : HTTP 404 | 6ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 99999 não encontrado","instance":"/api/v1/servicos/99999"}
+
+### [PUT-05] PUT em ID inexistente com corpo inválido (ordem: validação x busca)
+REQ : PUT /api/v1/servicos/99999
+CT  : application/json
+BODY: {}
+RES : HTTP 400 | 5ms | esperado=400/404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos/99999","erros":[{"campo":"nome","mensagem":"O nome é obrigatório"},{"campo":"preco","mensagem":"O preço é obrigatório"},{"campo":"duracaoMinutos","mensagem":"A duração estimada é obrigatória"},{"campo":"categoria","mensagem":"A categoria é obrigatória"}]}
+
+### [PUT-06] PUT com corpo vazio {} em ID existente
+REQ : PUT /api/v1/servicos/2
+CT  : application/json
+BODY: {}
+RES : HTTP 400 | 4ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos/2","erros":[{"campo":"nome","mensagem":"O nome é obrigatório"},{"campo":"duracaoMinutos","mensagem":"A duração estimada é obrigatória"},{"campo":"categoria","mensagem":"A categoria é obrigatória"},{"campo":"preco","mensagem":"O preço é obrigatório"}]}
+
+### [PUT-07] PUT com preco=0 em ID existente
+REQ : PUT /api/v1/servicos/2
+CT  : application/json
+BODY: {"nome":"Novo nome","categoria":"X","preco":0,"duracaoMinutos":10}
+RES : HTTP 400 | 4ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos/2","erros":[{"campo":"preco","mensagem":"O preço deve ser maior que zero"}]}
+
+### [PUT-08] PUT com JSON malformado
+REQ : PUT /api/v1/servicos/2
+CT  : application/json
+BODY: {"nome":
+RES : HTTP 400 | 4ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos/2"}
+
+### [PUT-09] PUT sem corpo
+REQ : PUT /api/v1/servicos/2
+CT  : application/json
+RES : HTTP 400 | 4ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos/2"}
+
+### [PUT-10] PUT com Content-Type text/plain
+REQ : PUT /api/v1/servicos/2
+CT  : text/plain
+BODY: {"nome":"Novo nome","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 415 | 3ms | esperado=415 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Tipo de conteúdo não suportado","status":415,"detail":"O tipo de conteúdo da requisição não é suportado. Use application/json","instance":"/api/v1/servicos/2"}
+
+### [PUT-11] PUT sem Content-Type
+REQ : PUT /api/v1/servicos/2
+BODY: {"nome":"Novo nome","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 415 | 6ms | esperado=415 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Tipo de conteúdo não suportado","status":415,"detail":"O tipo de conteúdo da requisição não é suportado. Use application/json","instance":"/api/v1/servicos/2"}
+
+### [PUT-12] PUT com ID não numérico (abc)
+REQ : PUT /api/v1/servicos/abc
+CT  : application/json
+BODY: {"nome":"Novo nome","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 400 | 3ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Parâmetro inválido","status":400,"detail":"O valor informado para o parâmetro 'id' é inválido","instance":"/api/v1/servicos/abc"}
+
+### [PUT-13] PATCH (não implementado)
+REQ : PATCH /api/v1/servicos/2
+CT  : application/json
+BODY: {"nome":"Novo nome"}
+RES : HTTP 405 | 5ms | esperado=405 | PASS
+      Content-Type: application/problem+json
+      Allow: PUT, GET, DELETE
+RESP: {"type":"about:blank","title":"Método não permitido","status":405,"detail":"O método HTTP PATCH não é suportado para este recurso","instance":"/api/v1/servicos/2"}
+
+### [PUT-14] PUT na coleção (sem ID)
+REQ : PUT /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Novo nome","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 405 | 4ms | esperado=405 | PASS
+      Content-Type: application/problem+json
+      Allow: POST, GET
+RESP: {"type":"about:blank","title":"Método não permitido","status":405,"detail":"O método HTTP PUT não é suportado para este recurso","instance":"/api/v1/servicos"}
+
+### [PUT-15] PUT com strip em nome/categoria e id divergente no corpo (id do corpo deve ser ignorado)
+REQ : PUT /api/v1/servicos/2
+CT  : application/json
+BODY: {"id":555,"nome":"  Limpeza pós-obra  ","categoria":"  Limpeza  ","preco":200,"duracaoMinutos":300}
+RES : HTTP 400 | 4ms | esperado=200 | FAIL
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos/2"}
+
+### [PUT-16] PUT com nome '  ab ' (mesmo bypass do @Size visto no POST)
+REQ : PUT /api/v1/servicos/6
+CT  : application/json
+BODY: {"nome":"  ab ","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 200 | 7ms | esperado=400/200 | PASS
+      Content-Type: application/json
+RESP: {"id":6,"nome":"ab","descricao":null,"categoria":"X","preco":10,"duracaoMinutos":10,"criadoEm":"2026-09-20T16:03:40.047404Z","atualizadoEm":"2026-09-20T16:05:35.460246Z"}
+
+### [PUT-15b] Repetição do PUT-15 com corpo em arquivo UTF-8 (strip + id divergente no corpo ignorado)
+REQ : PUT /api/v1/servicos/2
+CT  : application/json
+BODY: (arquivo put-strip-id.json) {"id":555,"nome":"  Limpeza pós-obra  ","categoria":"  Limpeza  ","preco":200,"duracaoMinutos":300}
+RES : HTTP 200 | 7ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: {"id":2,"nome":"Limpeza pós-obra","descricao":null,"categoria":"Limpeza","preco":200,"duracaoMinutos":300,"criadoEm":"2026-09-20T16:02:42.256015Z","atualizadoEm":"2026-09-20T16:05:59.770508Z"}
+
+### [PUT-15c] Controle: mesmo corpo com acento passado inline (curl.exe no Windows converte a codificação)
+REQ : PUT /api/v1/servicos/2
+CT  : application/json
+BODY: {"nome":"Limpeza pós-obra","categoria":"Limpeza","preco":200,"duracaoMinutos":300}
+RES : HTTP 400 | 3ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos/2"}
+
+### [PUT-15d] Controle: mesmo texto com acento escapado em ASCII (\u00f3) inline
+REQ : PUT /api/v1/servicos/2
+CT  : application/json
+BODY: {"nome":"Limpeza pós-obra","categoria":"Limpeza","preco":200,"duracaoMinutos":300}
+RES : HTTP 400 | 3ms | esperado=200 | FAIL
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos/2"}
+
+### [PUT-15d] Controle: acento escapado em ASCII (JSON \uXXXX) em arquivo - deve ser aceito e decodificado
+REQ : PUT /api/v1/servicos/2
+CT  : application/json
+BODY: (arquivo put-ascii-escape.json) {"nome":"Limpeza p\u00f3s-obra ASCII","categoria":"Limpeza","preco":200,"duracaoMinutos":300}
+RES : HTTP 200 | 25ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: {"id":2,"nome":"Limpeza pós-obra ASCII","descricao":null,"categoria":"Limpeza","preco":200,"duracaoMinutos":300,"criadoEm":"2026-09-20T16:02:42.256015Z","atualizadoEm":"2026-09-20T16:06:27.546451Z"}
+
+### [DEL-01] Exclui serviço existente (id=9)
+REQ : DELETE /api/v1/servicos/9
+RES : HTTP 204 | 9ms | esperado=204 | PASS
+RESP: (sem corpo)
+
+### [DEL-02] Consulta GET /9 após a exclusão
+REQ : GET /api/v1/servicos/9
+RES : HTTP 404 | 4ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 9 não encontrado","instance":"/api/v1/servicos/9"}
+
+### [DEL-03] Exclui novamente o mesmo ID (9)
+REQ : DELETE /api/v1/servicos/9
+RES : HTTP 404 | 5ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 9 não encontrado","instance":"/api/v1/servicos/9"}
+
+### [DEL-04] Exclui ID inexistente (99999)
+REQ : DELETE /api/v1/servicos/99999
+RES : HTTP 404 | 5ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 99999 não encontrado","instance":"/api/v1/servicos/99999"}
+
+### [DEL-05] Exclui com ID não numérico (abc)
+REQ : DELETE /api/v1/servicos/abc
+RES : HTTP 400 | 4ms | esperado=400 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Parâmetro inválido","status":400,"detail":"O valor informado para o parâmetro 'id' é inválido","instance":"/api/v1/servicos/abc"}
+
+### [DEL-06] DELETE na coleção (sem ID)
+REQ : DELETE /api/v1/servicos
+RES : HTTP 405 | 4ms | esperado=405 | PASS
+      Content-Type: application/problem+json
+      Allow: POST, GET
+RESP: {"type":"about:blank","title":"Método não permitido","status":405,"detail":"O método HTTP DELETE não é suportado para este recurso","instance":"/api/v1/servicos"}
+
+### [DEL-07] ID negativo (-1)
+REQ : DELETE /api/v1/servicos/-1
+RES : HTTP 404 | 5ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id -1 não encontrado","instance":"/api/v1/servicos/-1"}
+
+### [DEL-08] Exclui serviço com id=8 (duplicado de nome)
+REQ : DELETE /api/v1/servicos/8
+RES : HTTP 204 | 5ms | esperado=204 | PASS
+RESP: (sem corpo)
+
+### [DEL-09] Listagem após exclusões (9 e 8 ausentes)
+REQ : GET /api/v1/servicos
+RES : HTTP 200 | 7ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: [{"id":1,"nome":"Instalação de split 18.000 BTUs","descricao":null,"categoria":"Climatização","preco":480.00,"duracaoMinutos":150,"criadoEm":"2026-09-20T16:02:39.402492Z","atualizadoEm":"2026-09-20T16:05:09.228735Z"},{"id":2,"nome":"Limpeza pós-obra ASCII","descricao":null,"categoria":"Limpeza","preco":200.00,"duracaoMinutos":300,"criadoEm":"2026-09-20T16:02:42.256015Z","atualizadoEm":"2026-09-20T16:06:27.546451Z"},{"id":3,"nome":"Pintura de parede","descricao":null,"categoria":"Reformas","preco":90.00,"duracaoMinutos":240,"criadoEm":"2026-09-20T16:02:44.400311Z","atualizadoEm":"2026-09-20T16:02:44.400311Z"},{"id":4,"nome":"Teste decimal","descricao":null,"categoria":"X","preco":10.00,"
+
+### [ROTA-01] Rota inexistente /api/v1/foo
+REQ : GET /api/v1/foo
+RES : HTTP 404 | 6ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"A rota solicitada não existe","instance":"/api/v1/foo"}
+
+### [ROTA-02] Rota inexistente na raiz /
+REQ : GET /
+RES : HTTP 404 | 8ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"A rota solicitada não existe","instance":"/"}
+
+### [ROTA-03] Subrota inexistente /api/v1/servicos/1/extra
+REQ : GET /api/v1/servicos/1/extra
+RES : HTTP 404 | 7ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"A rota solicitada não existe","instance":"/api/v1/servicos/1/extra"}
+
+### [ROTA-04] Versão inexistente /api/v2/servicos
+REQ : GET /api/v2/servicos
+RES : HTTP 404 | 6ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"A rota solicitada não existe","instance":"/api/v2/servicos"}
+
+### [ROTA-05] /api/servicos (sem versão)
+REQ : GET /api/servicos
+RES : HTTP 404 | 7ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"A rota solicitada não existe","instance":"/api/servicos"}
+
+### [ROTA-06] POST em /api/v1/servicos/1
+REQ : POST /api/v1/servicos/1
+CT  : application/json
+BODY: {"nome":"Teste","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 405 | 5ms | esperado=405 | PASS
+      Content-Type: application/problem+json
+      Allow: PUT, GET, DELETE
+RESP: {"type":"about:blank","title":"Método não permitido","status":405,"detail":"O método HTTP POST não é suportado para este recurso","instance":"/api/v1/servicos/1"}
+
+### [ROTA-07] POST em rota inexistente
+REQ : POST /api/v1/foo
+CT  : application/json
+BODY: {}
+RES : HTTP 404 | 6ms | esperado=404 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"A rota solicitada não existe","instance":"/api/v1/foo"}
+
+### [ERR-01] GET /servicos com o PostgreSQL parado (erro inesperado -> handler genérico)
+REQ : GET /api/v1/servicos
+RES : HTTP 500 | 30028ms | esperado=500 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Erro interno do servidor","status":500,"detail":"Ocorreu um erro interno. Tente novamente mais tarde.","instance":"/api/v1/servicos"}
+
+### [ERR-02] POST válido com o PostgreSQL parado
+REQ : POST /api/v1/servicos
+CT  : application/json
+BODY: {"nome":"Sem banco","categoria":"X","preco":10,"duracaoMinutos":10}
+RES : HTTP 500 | 30008ms | esperado=500 | PASS
+      Content-Type: application/problem+json
+RESP: {"type":"about:blank","title":"Erro interno do servidor","status":500,"detail":"Ocorreu um erro interno. Tente novamente mais tarde.","instance":"/api/v1/servicos"}
+
+### [ERR-03] GET /servicos após religar o PostgreSQL (recuperação do pool)
+REQ : GET /api/v1/servicos
+RES : HTTP 200 | 24ms | esperado=200 | PASS
+      Content-Type: application/json
+RESP: [{"id":1,"nome":"Instalação de split 18.000 BTUs","descricao":null,"categoria":"Climatização","preco":480.00,"duracaoMinutos":150,"criadoEm":"2026-09-20T16:02:39.402492Z","atualizadoEm":"2026-09-20T16:05:09.228735Z"},{"id":2,"nome":"Limpeza pós-obra ASCII","descricao":null,"categoria":"Limpeza","preco":200.00,"duracaoMinutos":300,"criadoEm":"2026-09-20T16:02:42.256015Z","atualizadoEm":"2026-09-20T16:06:27.546451Z"},{"id":3,"nome":"Pintura de parede","descricao":null,"categoria":"Reformas","preco":90.00,"duracaoMinutos":240,"criadoEm":"2026-09-20T16:02:44.400311Z","atualizadoEm":"2026-09-20T16:02:44.400311Z"},{"id":4,"nome":"Teste decimal","descricao":null,"categoria":"X","preco":10.00,"
+

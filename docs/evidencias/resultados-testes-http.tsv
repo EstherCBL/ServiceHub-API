@@ -1,0 +1,86 @@
+POST-01	POST /api/v1/servicos	201	201	PASS	Cria serviço válido (com acentos, com descrição)
+POST-02	POST /api/v1/servicos	201	201	PASS	Cria serviço válido sem descrição (campo opcional)
+POST-03	POST /api/v1/servicos	201	201	PASS	Cria serviço com espaços nas bordas de nome/categoria (esperado: strip)
+POST-04	POST /api/v1/servicos	400	400	PASS	Corpo vazio {} (todos os obrigatórios ausentes)
+POST-05	POST /api/v1/servicos	400	400	PASS	Sem corpo, Content-Type JSON
+POST-06	POST /api/v1/servicos	415	415	PASS	Com corpo, sem Content-Type
+POST-07	POST /api/v1/servicos	415	415	PASS	Content-Type text/plain
+POST-08	POST /api/v1/servicos	400	400	PASS	JSON malformado (chave sem fechar)
+POST-09	POST /api/v1/servicos	400	400	PASS	JSON malformado (texto puro)
+POST-10	POST /api/v1/servicos	400	400	PASS	preco = 0
+POST-11	POST /api/v1/servicos	400	400	PASS	preco negativo
+POST-12	POST /api/v1/servicos	400	400	PASS	preco com 3 casas decimais
+POST-13	POST /api/v1/servicos	400	400	PASS	preco acima do máximo (100000000)
+POST-14	POST /api/v1/servicos	400	400	PASS	preco como string não numérica
+POST-15	POST /api/v1/servicos	400	400	PASS	duracaoMinutos = 0
+POST-16	POST /api/v1/servicos	400	400	PASS	duracaoMinutos acima do máximo (100001)
+POST-17	POST /api/v1/servicos	400	400	PASS	duracaoMinutos como string não numérica
+POST-18	POST /api/v1/servicos	400/201	201	PASS	duracaoMinutos decimal (1.5) - comportamento do Jackson
+POST-19	POST /api/v1/servicos	400	400	PASS	nome vazio
+POST-20	POST /api/v1/servicos	400	400	PASS	nome só com espaços
+POST-21	POST /api/v1/servicos	400	400	PASS	nome com 2 caracteres (mínimo 3)
+POST-22	POST /api/v1/servicos	400	400	PASS	nome com 101 caracteres (máximo 100)
+POST-23	POST /api/v1/servicos	400	400	PASS	categoria vazia
+POST-24	POST /api/v1/servicos	400	400	PASS	categoria com 61 caracteres (máximo 60)
+POST-25	POST /api/v1/servicos	400	400	PASS	descricao com 501 caracteres (máximo 500)
+POST-26	POST /api/v1/servicos	400	400	PASS	campos obrigatórios explicitamente null
+POST-27	POST /api/v1/servicos	201	201	PASS	Limite: nome com 100 caracteres
+POST-28	POST /api/v1/servicos	201	201	PASS	Limite mínimo: preco 0.01 e duração 1, nome 3 caracteres
+POST-29	POST /api/v1/servicos	201	201	PASS	Propriedade desconhecida e id no corpo (devem ser ignorados)
+POST-30	POST /api/v1/servicos	201	201	PASS	Nome duplicado (não há regra de unicidade)
+POST-31	POST /api/v1/servicos	400/201	201	PASS	Bypass de @Size(min=3) via strip: nome '  ab ' (5 chars antes do strip)
+GET-01	GET /api/v1/servicos	200	200	PASS	Listar todos os serviços
+GET-02	GET /api/v1/servicos/1	200	200	PASS	Buscar por ID existente (id=1)
+GET-03	GET /api/v1/servicos/3	200	200	PASS	Buscar por ID existente (id=3, valores com strip)
+GET-04	GET /api/v1/servicos/4	200	200	PASS	Buscar id=4 (preco enviado como 10 - conferir escala)
+GET-05	GET /api/v1/servicos/99999	404	404	PASS	ID inexistente (99999)
+GET-06	GET /api/v1/servicos/abc	400	400	PASS	ID não numérico (abc)
+GET-07	GET /api/v1/servicos/0	404	404	PASS	ID zero (0)
+GET-08	GET /api/v1/servicos/-1	404	404	PASS	ID negativo (-1)
+GET-09	GET /api/v1/servicos/99999999999999999999	400	400	PASS	ID acima de Long (99999999999999999999)
+GET-10	GET /api/v1/servicos/1.5	400	400	PASS	ID decimal (1.5)
+GET-11	GET /api/v1/servicos?page=0&size=2&categoria=Limpeza	200	200	PASS	Parâmetros de paginação/filtro (page=0&size=2&categoria=Limpeza) - não implementados, devem ser ignorados
+GET-12	GET /api/v1/servicos/	404	404	PASS	Barra final na coleção (/servicos/)
+GET-13	GET /api/v1/servicos/1	406	406	PASS	Accept: application/xml (API só produz JSON)
+GET-14	HEAD /api/v1/servicos	200	200	PASS	HEAD na coleção
+GET-15	OPTIONS /api/v1/servicos	200	200	PASS	OPTIONS na coleção
+GET-16	GET /api/v1/servicos/1	200	200	PASS	GET com Origin (sem CORS configurado) - verifica ausência de Access-Control-Allow-Origin
+GET-17	OPTIONS /api/v1/servicos	403	403	PASS	Preflight CORS (OPTIONS + Access-Control-Request-Method) sem CORS configurado
+PUT-01	PUT /api/v1/servicos/1	200	200	PASS	Atualiza serviço 1 com corpo completo válido
+PUT-02	GET /api/v1/servicos/1	200	200	PASS	Reconsulta GET /1 após o PUT (persistência)
+PUT-03	PUT /api/v1/servicos/1	200	200	PASS	PUT sem descrição (semântica PUT: descrição é limpa)
+PUT-04	PUT /api/v1/servicos/99999	404	404	PASS	PUT em ID inexistente com corpo válido
+PUT-05	PUT /api/v1/servicos/99999	400/404	400	PASS	PUT em ID inexistente com corpo inválido (ordem: validação x busca)
+PUT-06	PUT /api/v1/servicos/2	400	400	PASS	PUT com corpo vazio {} em ID existente
+PUT-07	PUT /api/v1/servicos/2	400	400	PASS	PUT com preco=0 em ID existente
+PUT-08	PUT /api/v1/servicos/2	400	400	PASS	PUT com JSON malformado
+PUT-09	PUT /api/v1/servicos/2	400	400	PASS	PUT sem corpo
+PUT-10	PUT /api/v1/servicos/2	415	415	PASS	PUT com Content-Type text/plain
+PUT-11	PUT /api/v1/servicos/2	415	415	PASS	PUT sem Content-Type
+PUT-12	PUT /api/v1/servicos/abc	400	400	PASS	PUT com ID não numérico (abc)
+PUT-13	PATCH /api/v1/servicos/2	405	405	PASS	PATCH (não implementado)
+PUT-14	PUT /api/v1/servicos	405	405	PASS	PUT na coleção (sem ID)
+PUT-15	PUT /api/v1/servicos/2	200	400	FAIL	PUT com strip em nome/categoria e id divergente no corpo (id do corpo deve ser ignorado)
+PUT-16	PUT /api/v1/servicos/6	400/200	200	PASS	PUT com nome '  ab ' (mesmo bypass do @Size visto no POST)
+PUT-15b	PUT /api/v1/servicos/2	200	200	PASS	Repetição do PUT-15 com corpo em arquivo UTF-8 (strip + id divergente no corpo ignorado)
+PUT-15c	PUT /api/v1/servicos/2	400	400	PASS	Controle: mesmo corpo com acento passado inline (curl.exe no Windows converte a codificação)
+PUT-15d	PUT /api/v1/servicos/2	200	200	PASS	Controle: acento escapado em ASCII (JSON \uXXXX) em arquivo - deve ser aceito e decodificado
+DEL-01	DELETE /api/v1/servicos/9	204	204	PASS	Exclui serviço existente (id=9)
+DEL-02	GET /api/v1/servicos/9	404	404	PASS	Consulta GET /9 após a exclusão
+DEL-03	DELETE /api/v1/servicos/9	404	404	PASS	Exclui novamente o mesmo ID (9)
+DEL-04	DELETE /api/v1/servicos/99999	404	404	PASS	Exclui ID inexistente (99999)
+DEL-05	DELETE /api/v1/servicos/abc	400	400	PASS	Exclui com ID não numérico (abc)
+DEL-06	DELETE /api/v1/servicos	405	405	PASS	DELETE na coleção (sem ID)
+DEL-07	DELETE /api/v1/servicos/-1	404	404	PASS	ID negativo (-1)
+DEL-08	DELETE /api/v1/servicos/8	204	204	PASS	Exclui serviço com id=8 (duplicado de nome)
+DEL-09	GET /api/v1/servicos	200	200	PASS	Listagem após exclusões (9 e 8 ausentes)
+ROTA-01	GET /api/v1/foo	404	404	PASS	Rota inexistente /api/v1/foo
+ROTA-02	GET /	404	404	PASS	Rota inexistente na raiz /
+ROTA-03	GET /api/v1/servicos/1/extra	404	404	PASS	Subrota inexistente /api/v1/servicos/1/extra
+ROTA-04	GET /api/v2/servicos	404	404	PASS	Versão inexistente /api/v2/servicos
+ROTA-05	GET /api/servicos	404	404	PASS	/api/servicos (sem versão)
+ROTA-06	POST /api/v1/servicos/1	405	405	PASS	POST em /api/v1/servicos/1
+ROTA-07	POST /api/v1/foo	404	404	PASS	POST em rota inexistente
+ERR-01	GET /api/v1/servicos	500	500	PASS	GET /servicos com o PostgreSQL parado (erro inesperado -> handler genérico)
+ERR-02	POST /api/v1/servicos	500	500	PASS	POST válido com o PostgreSQL parado
+ERR-03	GET /api/v1/servicos	200	200	PASS	GET /servicos após religar o PostgreSQL (recuperação do pool)
