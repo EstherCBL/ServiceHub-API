@@ -48,14 +48,23 @@ public record ServicoRequest(
         @Max(value = 100000, message = "A duração estimada excede o valor máximo permitido")
         Integer duracaoMinutos) {
 
+    /**
+     * Remove os espaços das bordas de nome e categoria já na construção, antes do Bean Validation,
+     * para que os limites de tamanho valham para o texto que de fato será gravado.
+     */
+    public ServicoRequest {
+        nome = nome == null ? null : nome.strip();
+        categoria = categoria == null ? null : categoria.strip();
+    }
+
     public Servico paraEntidade() {
-        return new Servico(nome.strip(), descricao, categoria.strip(), preco, duracaoMinutos);
+        return new Servico(nome, descricao, categoria, preco, duracaoMinutos);
     }
 
     public void aplicarEm(Servico servico) {
-        servico.setNome(nome.strip());
+        servico.setNome(nome);
         servico.setDescricao(descricao);
-        servico.setCategoria(categoria.strip());
+        servico.setCategoria(categoria);
         servico.setPreco(preco);
         servico.setDuracaoMinutos(duracaoMinutos);
     }

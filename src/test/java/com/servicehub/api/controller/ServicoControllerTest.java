@@ -1,5 +1,7 @@
 package com.servicehub.api.controller;
 
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.matchesPattern;
@@ -124,9 +126,69 @@ class ServicoControllerTest {
         @Test
         @DisplayName("retorna 400 para nome em branco e duração menor que 1")
         void rejeitaNomeEmBrancoEDuracaoInvalida() throws Exception {
+            // O nome em branco é normalizado para "" antes da validação, então falha em @NotBlank e @Size.
             postar(JSON_VALIDO.replace("Instalação de ar-condicionado", "   ").replace("120", "0"))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.erros[*].campo", containsInAnyOrder("nome", "duracaoMinutos")));
+                    .andExpect(jsonPath("$.erros[*].campo", hasItems("nome", "duracaoMinutos")))
+                    .andExpect(jsonPath("$.erros[?(@.campo == 'nome')].mensagem", hasItem("O nome é obrigatório")));
+        }
+
+        @Test
+        @DisplayName("retorna 400 para nome com menos de 3 caracteres úteis mesmo com espaços nas bordas")
+        void rejeitaNomeCurtoComEspacosNasBordas() throws Exception {
+            postar(JSON_VALIDO.replace("Instalação de ar-condicionado", "  ab "))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.erros", hasSize(1)))
+                    .andExpect(jsonPath("$.erros[0].campo").value("nome"))
+                    .andExpect(jsonPath("$.erros[0].mensagem").value("O nome deve ter entre 3 e 100 caracteres"));
+            org.junit.jupiter.api.Assertions.assertEquals(0, repository.count());
+        }
+
+        @Test
+        @DisplayName("remove os espaços das bordas de nome e categoria e aceita o nome no limite mínimo")
+        void normalizaNomeECategoria() throws Exception {
+            postar(JSON_VALIDO.replace("Instalação de ar-condicionado", "  abc  ")
+                    .replace("Climatização", "  Reformas  "))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.nome").value("abc"))
+                    .andExpect(jsonPath("$.categoria").value("Reformas"));
+        }
+
+        @Test
+        @DisplayName("aceita nome de 100 caracteres úteis cercado por espaços")
+        void aceitaNomeNoLimiteMaximoComEspacos() throws Exception {
+            String nome = "a".repeat(100);
+
+            postar(JSON_VALIDO.replace("Instalação de ar-condicionado", "  " + nome + "  "))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.nome").value(nome));
+        }
+
+        @Test
+        @DisplayName("retorna 400 para categoria só com espaços")
+        void rejeitaCategoriaSoComEspacos() throws Exception {
+            postar(JSON_VALIDO.replace("Climatização", "   "))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.erros[0].campo").value("categoria"))
+                    .andExpect(jsonPath("$.erros[0].mensagem").value("A categoria é obrigatória"));
+        }
+
+        @Test
+        @DisplayName("retorna 400 para duração decimal em vez de truncá-la")
+        void rejeitaDuracaoDecimal() throws Exception {
+            postar(JSON_VALIDO.replace("120", "1.5"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                    .andExpect(jsonPath("$.title").value("Corpo da requisição inválido"));
+            org.junit.jupiter.api.Assertions.assertEquals(0, repository.count());
+        }
+
+        @Test
+        @DisplayName("retorna 400 também para duração decimal sem parte fracionária (120.0)")
+        void rejeitaDuracaoDecimalInteira() throws Exception {
+            postar(JSON_VALIDO.replace("120", "120.0"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.title").value("Corpo da requisição inválido"));
         }
 
         @Test
@@ -251,6 +313,34 @@ class ServicoControllerTest {
 
             mockMvc.perform(get(BASE + "/" + id))
                     .andExpect(jsonPath("$.nome").value("Instalação de ar-condicionado"));
+        }
+
+        @Test
+        @DisplayName("retorna 400 e mantém os dados originais para nome com menos de 3 caracteres úteis")
+        void atualizaComNomeCurtoEEspacosNasBordas() throws Exception {
+            long id = criarServico();
+
+            mockMvc.perform(put(BASE + "/" + id).contentType(MediaType.APPLICATION_JSON)
+                    .content(JSON_ATUALIZADO.replace("Instalação de split 18.000 BTUs", "  ab ")))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.erros[0].campo").value("nome"));
+
+            mockMvc.perform(get(BASE + "/" + id))
+                    .andExpect(jsonPath("$.nome").value("Instalação de ar-condicionado"));
+        }
+
+        @Test
+        @DisplayName("retorna 400 e mantém a duração original para duração decimal")
+        void atualizaComDuracaoDecimal() throws Exception {
+            long id = criarServico();
+
+            mockMvc.perform(put(BASE + "/" + id).contentType(MediaType.APPLICATION_JSON)
+                    .content(JSON_ATUALIZADO.replace("150", "1.5")))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.title").value("Corpo da requisição inválido"));
+
+            mockMvc.perform(get(BASE + "/" + id))
+                    .andExpect(jsonPath("$.duracaoMinutos").value(120));
         }
     }
 
