@@ -1091,11 +1091,29 @@ Isso fecha o item "`.\mvnw.cmd test` no diretório de trabalho real depois da co
 **Código:** revisado; **nada foi removido**. Não há import sem uso (verificado por script), e todos os getters, setters e métodos de conversão são usados. As únicas adições desta validação são o construtor compacto de `ServicoRequest` (necessário para o P1) e uma propriedade do Jackson (necessária para o P2). O bean `ordenarCaminhos` de `OpenApiConfig` só define a ordem de exibição dos caminhos no Swagger; foi mantido por não ser possível dizer, sem testar, como o Swagger UI ficaria sem ele.
 
 **Encontrado e deliberadamente não alterado**
-- `docs/ServiceHub-API-Checkpoint.pptx` está desatualizado nos slides 9 e 10 ("27 testes", "23 de integração e 4 unitários", "PostgreSQL 16.4"); hoje são **41 testes** (31 + 6 + 4) e o banco foi validado em Docker com o PostgreSQL 16.15. O arquivo não foi editado.
-- `.github/modernize/` (plano, progresso, logs e *hooks* da ferramenta de upgrade para Java 25) existe só no disco: o `.gitignore` interno da pasta o exclui do Git. Não foi apagado.
+- `docs/ServiceHub-API-Checkpoint.pptx` está desatualizado nos slides 9 e 10 ("27 testes", "23 de integração e 4 unitários", "PostgreSQL 16.4"); hoje são **41 testes** (31 + 6 + 4) e o banco foi validado em Docker com o PostgreSQL 16.15. *(Atualizado depois, a pedido do usuário: ver 17.17.)*
+- `.github/modernize/` (plano, progresso, logs e *hooks* da ferramenta de upgrade para Java 25) existe só no disco: o `.gitignore` interno da pasta o exclui do Git. Não foi apagado na ocasião; **depois foi removido a pedido do usuário** (a pasta `.github/` inteira, 8 arquivos, nenhum rastreado pelo Git), pois nada do projeto depende dela.
 
 **Commits** (branch **`correcao-p1-p2`**, criada a partir do commit do usuário `1b4e9a5`; nada foi enviado ao remoto)
 1. `d54c56a` — *Corrige validação do nome com espaços (P1) e duração decimal (P2)*: só `ServicoRequest.java`, `application.properties` e os testes. Verificado **isoladamente** (extração por `git archive`, `.\mvnw.cmd -B test`, JDK 21, sem `-D`): **41 testes, 0 falhas, `BUILD SUCCESS`**.
 2. Commit de documentação: `README.md`, este relatório, `docker-compose.yml` e `docs/evidencias/`.
 
 O `pom.xml` desta branch é o mesmo de `1b4e9a5` (`java.version` = **21**), por isso não há commit de pom. A branch `appmod/java-upgrade-20260921034935` **não foi alterada** e mantém o commit `6be3de9` (Java 25).
+
+### 17.17 Atualização do PPTX da apresentação (21/09/2026)
+
+A pedido do usuário, `docs/ServiceHub-API-Checkpoint.pptx` foi atualizado com os dados desta validação. A edição foi **só de texto**, direto no XML dos slides; layout, cores e imagens permanecem iguais. O arquivo passou no validador de estrutura OOXML, abre no PowerPoint (11 slides) e só as partes dos slides listados abaixo (mais o slide 1, ver a última ressalva) mudaram (as demais são idênticas byte a byte). Os quatro slides foram conferidos visualmente, exportados pelo PowerPoint, sem estouro de texto.
+
+| Slide | Antes | Depois |
+|---|---|---|
+| 3 — Tecnologias | "Também: Bean Validation · JUnit 5 · MockMvc · Mockito · H2 (apenas nos testes)" | acrescentado "· Docker Compose" |
+| 9 — Código, testes e persistência | "27 testes"; "23 de integração … e 4 unitários (Mockito)"; "Validado manualmente no PostgreSQL 16.4"; "dados mantidos após reiniciar a aplicação" | **41** testes; "31 de integração (MockMvc + H2) e 10 unitários"; "PostgreSQL **16.15**"; "Em Docker: CRUD por HTTP · SELECT direto na tabela · migration Flyway V1 aplicada"; nova linha de comentário no trecho de código: `// nome e categoria: strip() antes da validação` |
+| 10 — Conclusão | "27 testes automatizados passando"; "Projeto Spring Boot configurado com PostgreSQL" | "**41** testes automatizados passando"; "… PostgreSQL (Docker Compose)" |
+| 11 — Obrigado | "README.md: execução, endpoints e testes" | acrescentada a linha "RELATORIO_TECNICO_TESTES.md: validação detalhada" |
+
+**Decisões e ressalvas**
+- A frase "dados mantidos após reiniciar a aplicação" (slide 9) **foi trocada**, porque essa verificação não foi repetida nesta validação; entrou no lugar o que foi de fato confirmado em Docker (migration `V1` aplicada).
+- O **slide 8** (print do Swagger UI com um `POST` `201` de 20/09, `id: 5`, PostgreSQL local) **não foi alterado**: é evidência histórica do autor, que esta validação não reproduziu (só o `GET` foi executado pela interface, seção 17.9).
+- Os demais slides (1, 2, 4, 5, 6, 7) continuam válidos com o código atual: endpoints, modelagem, arquitetura e Swagger não mudaram.
+- A caixa "Limitações atuais" do slide 9 foi mantida ("sem autenticação e sem paginação; testes usam H2"), pois continua verdadeira.
+- **Slide 1:** o campo "Integrantes: [preencher com os nomes da equipe]" foi preenchido depois, com o dado informado pela autora, que é a única integrante: "**Integrante:** Esther Carolina Batista Lima" (no singular). Nova edição só de texto; o arquivo foi validado e o slide, conferido no PowerPoint.
