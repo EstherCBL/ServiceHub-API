@@ -1,0 +1,156 @@
+==================================================================
+[POST-01] Criar servico valido (acentos, com descricao)
+Requisicao : POST http://localhost:8080/api/v1/servicos  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/post-valido.json
+Esperado   : 201   Obtido: 201   Resultado: PASS
+Headers    : Location: http://localhost:8080/api/v1/servicos/1;Content-Type: application/json;
+Corpo      : {"id":1,"nome":"Instalação de ar-condicionado","descricao":"Instalação de split de até 12.000 BTUs","categoria":"Climatização","preco":350.00,"duracaoMinutos":120,"criadoEm":"2026-09-21T03:25:45.279681Z","atualizadoEm":"2026-09-21T03:25:45.279651Z"}
+==================================================================
+[POST-02] Criar servico valido sem descricao
+Requisicao : POST http://localhost:8080/api/v1/servicos  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/post-sem-descricao.json
+Esperado   : 201   Obtido: 201   Resultado: PASS
+Headers    : Location: http://localhost:8080/api/v1/servicos/2;Content-Type: application/json;
+Corpo      : {"id":2,"nome":"Limpeza residencial","descricao":null,"categoria":"Limpeza","preco":120.50,"duracaoMinutos":180,"criadoEm":"2026-09-21T03:25:45.699688Z","atualizadoEm":"2026-09-21T03:25:45.699675Z"}
+==================================================================
+[POST-03] Corpo vazio {} (campos obrigatorios ausentes)
+Requisicao : POST http://localhost:8080/api/v1/servicos  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/post-vazio.json
+Esperado   : 400   Obtido: 400   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"categoria","mensagem":"A categoria é obrigatória"},{"campo":"duracaoMinutos","mensagem":"A duração estimada é obrigatória"},{"campo":"nome","mensagem":"O nome é obrigatório"},{"campo":"preco","mensagem":"O preço é obrigatório"}]}
+==================================================================
+[POST-04] preco = 0
+Requisicao : POST http://localhost:8080/api/v1/servicos  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/post-preco-zero.json
+Esperado   : 400   Obtido: 400   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"preco","mensagem":"O preço deve ser maior que zero"}]}
+==================================================================
+[POST-05] preco negativo
+Requisicao : POST http://localhost:8080/api/v1/servicos  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/post-preco-negativo.json
+Esperado   : 400   Obtido: 400   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"preco","mensagem":"O preço deve ser maior que zero"}]}
+==================================================================
+[POST-06] nome com 2 caracteres
+Requisicao : POST http://localhost:8080/api/v1/servicos  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/post-nome-curto.json
+Esperado   : 400   Obtido: 400   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"nome","mensagem":"O nome deve ter entre 3 e 100 caracteres"}]}
+==================================================================
+[POST-07] duracaoMinutos = 0
+Requisicao : POST http://localhost:8080/api/v1/servicos  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/post-duracao-zero.json
+Esperado   : 400   Obtido: 400   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"duracaoMinutos","mensagem":"A duração estimada deve ser de pelo menos 1 minuto"}]}
+==================================================================
+[POST-08] JSON malformado
+Requisicao : POST http://localhost:8080/api/v1/servicos  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/post-json-malformado.json
+Esperado   : 400   Obtido: 400   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos"}
+==================================================================
+[POST-09] Sem Content-Type
+Requisicao : POST http://localhost:8080/api/v1/servicos  | args: --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/post-valido.json
+Esperado   : 415   Obtido: 415   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Tipo de conteúdo não suportado","status":415,"detail":"O tipo de conteúdo da requisição não é suportado. Use application/json","instance":"/api/v1/servicos"}
+==================================================================
+[GET-01] Listar todos
+Requisicao : GET http://localhost:8080/api/v1/servicos  | args: 
+Esperado   : 200   Obtido: 200   Resultado: PASS
+Headers    : Content-Type: application/json;
+Corpo      : [{"id":1,"nome":"Instalação de ar-condicionado","descricao":"Instalação de split de até 12.000 BTUs","categoria":"Climatização","preco":350.00,"duracaoMinutos":120,"criadoEm":"2026-09-21T03:25:45.279681Z","atualizadoEm":"2026-09-21T03:25:45.279651Z"},{"id":2,"nome":"Limpeza residencial","descricao":null,"categoria":"Limpeza","preco":120.50,"duracaoMinutos":180,"criadoEm":"2026-09-21T03:25:45.699688Z","atualizadoEm":"2026-09-21T03:25:45.699675Z"}]
+==================================================================
+[GET-02] Buscar por ID existente (1)
+Requisicao : GET http://localhost:8080/api/v1/servicos/1  | args: 
+Esperado   : 200   Obtido: 200   Resultado: PASS
+Headers    : Content-Type: application/json;
+Corpo      : {"id":1,"nome":"Instalação de ar-condicionado","descricao":"Instalação de split de até 12.000 BTUs","categoria":"Climatização","preco":350.00,"duracaoMinutos":120,"criadoEm":"2026-09-21T03:25:45.279681Z","atualizadoEm":"2026-09-21T03:25:45.279651Z"}
+==================================================================
+[GET-03] Buscar por ID inexistente
+Requisicao : GET http://localhost:8080/api/v1/servicos/99999  | args: 
+Esperado   : 404   Obtido: 404   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 99999 não encontrado","instance":"/api/v1/servicos/99999"}
+==================================================================
+[GET-04] ID nao numerico
+Requisicao : GET http://localhost:8080/api/v1/servicos/abc  | args: 
+Esperado   : 400   Obtido: 400   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Parâmetro inválido","status":400,"detail":"O valor informado para o parâmetro 'id' é inválido","instance":"/api/v1/servicos/abc"}
+==================================================================
+[PUT-01] Atualizar servico existente
+Requisicao : PUT http://localhost:8080/api/v1/servicos/1  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/put-valido.json
+Esperado   : 200   Obtido: 200   Resultado: PASS
+Headers    : Content-Type: application/json;
+Corpo      : {"id":1,"nome":"Instalação de split 18.000 BTUs","descricao":"Instalação completa com tubulação de até 5 metros","categoria":"Climatização","preco":480.00,"duracaoMinutos":150,"criadoEm":"2026-09-21T03:25:45.279681Z","atualizadoEm":"2026-09-21T03:25:50.066210Z"}
+==================================================================
+[PUT-02] GET apos PUT
+Requisicao : GET http://localhost:8080/api/v1/servicos/1  | args: 
+Esperado   : 200   Obtido: 200   Resultado: PASS
+Headers    : Content-Type: application/json;
+Corpo      : {"id":1,"nome":"Instalação de split 18.000 BTUs","descricao":"Instalação completa com tubulação de até 5 metros","categoria":"Climatização","preco":480.00,"duracaoMinutos":150,"criadoEm":"2026-09-21T03:25:45.279681Z","atualizadoEm":"2026-09-21T03:25:50.066210Z"}
+==================================================================
+[PUT-03] PUT com ID inexistente (corpo valido)
+Requisicao : PUT http://localhost:8080/api/v1/servicos/99999  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/put-valido.json
+Esperado   : 404   Obtido: 404   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 99999 não encontrado","instance":"/api/v1/servicos/99999"}
+==================================================================
+[PUT-04] PUT com corpo invalido em ID existente
+Requisicao : PUT http://localhost:8080/api/v1/servicos/2  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/put-invalido.json
+Esperado   : 400   Obtido: 400   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos/2","erros":[{"campo":"duracaoMinutos","mensagem":"A duração estimada deve ser de pelo menos 1 minuto"},{"campo":"nome","mensagem":"O nome é obrigatório"},{"campo":"preco","mensagem":"O preço deve ser maior que zero"},{"campo":"nome","mensagem":"O nome deve ter entre 3 e 100 caracteres"},{"campo":"categoria","mensagem":"A categoria é obrigatória"}]}
+==================================================================
+[PATCH-01] PATCH (nao implementado)
+Requisicao : PATCH http://localhost:8080/api/v1/servicos/1  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/put-valido.json
+Esperado   : 405   Obtido: 405   Resultado: PASS
+Headers    : Allow: DELETE, PUT, GET;Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Método não permitido","status":405,"detail":"O método HTTP PATCH não é suportado para este recurso","instance":"/api/v1/servicos/1"}
+==================================================================
+[DEL-01] Excluir servico existente (2)
+Requisicao : DELETE http://localhost:8080/api/v1/servicos/2  | args: 
+Esperado   : 204   Obtido: 204   Resultado: PASS
+Headers    : 
+Corpo      : 
+==================================================================
+[DEL-02] GET apos DELETE
+Requisicao : GET http://localhost:8080/api/v1/servicos/2  | args: 
+Esperado   : 404   Obtido: 404   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 2 não encontrado","instance":"/api/v1/servicos/2"}
+==================================================================
+[DEL-03] DELETE do mesmo ID novamente
+Requisicao : DELETE http://localhost:8080/api/v1/servicos/2  | args: 
+Esperado   : 404   Obtido: 404   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 2 não encontrado","instance":"/api/v1/servicos/2"}
+==================================================================
+[DEL-04] DELETE de ID inexistente
+Requisicao : DELETE http://localhost:8080/api/v1/servicos/99999  | args: 
+Esperado   : 404   Obtido: 404   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 99999 não encontrado","instance":"/api/v1/servicos/99999"}
+==================================================================
+[DEL-05] DELETE com ID nao numerico
+Requisicao : DELETE http://localhost:8080/api/v1/servicos/abc  | args: 
+Esperado   : 400   Obtido: 400   Resultado: PASS
+Headers    : Content-Type: application/problem+json;
+Corpo      : {"type":"about:blank","title":"Parâmetro inválido","status":400,"detail":"O valor informado para o parâmetro 'id' é inválido","instance":"/api/v1/servicos/abc"}
+==================================================================
+[GET-05] Listar apos DELETE
+Requisicao : GET http://localhost:8080/api/v1/servicos  | args: 
+Esperado   : 200   Obtido: 200   Resultado: PASS
+Headers    : Content-Type: application/json;
+Corpo      : [{"id":1,"nome":"Instalação de split 18.000 BTUs","descricao":"Instalação completa com tubulação de até 5 metros","categoria":"Climatização","preco":480.00,"duracaoMinutos":150,"criadoEm":"2026-09-21T03:25:45.279681Z","atualizadoEm":"2026-09-21T03:25:50.066210Z"}]
+==================================================================
+[OBS-P1] nome '  ab ' (esperado 400 pelo contrato; P1 previa 201)
+Requisicao : POST http://localhost:8080/api/v1/servicos  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/post-nome-espacos.json
+Esperado   : 400   Obtido: 201   Resultado: FAIL
+Headers    : Location: http://localhost:8080/api/v1/servicos/3;Content-Type: application/json;
+Corpo      : {"id":3,"nome":"ab","descricao":null,"categoria":"Teste","preco":10,"duracaoMinutos":60,"criadoEm":"2026-09-21T03:25:52.525419Z","atualizadoEm":"2026-09-21T03:25:52.525405Z"}
+==================================================================
+[OBS-P2] duracaoMinutos 1.5 (esperado 400 pelo contrato; P2 previa 201)
+Requisicao : POST http://localhost:8080/api/v1/servicos  | args: -H Content-Type:application/json --data-binary @C:/Users/Sthe/AppData/Local/Temp/claude/C--Projetos-Github-ServiceHub-API/29bc04a0-7cc0-4a4f-b4cc-2116148f35f8/scratchpad/bodies/post-duracao-decimal.json
+Esperado   : 400   Obtido: 201   Resultado: FAIL
+Headers    : Location: http://localhost:8080/api/v1/servicos/4;Content-Type: application/json;
+Corpo      : {"id":4,"nome":"Duracao decimal","descricao":null,"categoria":"Teste","preco":10,"duracaoMinutos":1,"criadoEm":"2026-09-21T03:25:52.670368Z","atualizadoEm":"2026-09-21T03:25:52.670355Z"}

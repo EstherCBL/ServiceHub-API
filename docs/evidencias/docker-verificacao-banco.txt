@@ -1,0 +1,69 @@
+### Apos os POSTs (esperado: 2 linhas; invalidos nao persistidos)
+SQL> select id, nome, descricao, categoria, preco, duracao_minutos, criado_em = atualizado_em as criado_igual_atualizado from servicos order by id;
+ id |             nome              |               descricao                |  categoria   | preco  | duracao_minutos | criado_igual_atualizado 
+----+-------------------------------+----------------------------------------+--------------+--------+-----------------+-------------------------
+  1 | Instalação de ar-condicionado | Instalação de split de até 12.000 BTUs | Climatização | 350.00 |             120 | f
+  2 | Limpeza residencial           |                                        | Limpeza      | 120.50 |             180 | f
+(2 rows)
+
+
+### Migrations
+SQL> select installed_rank, version, description, script, success from flyway_schema_history;
+ installed_rank | version |      description      |            script             | success 
+----------------+---------+-----------------------+-------------------------------+---------
+              1 | 1       | criar tabela servicos | V1__criar_tabela_servicos.sql | t
+(1 row)
+
+
+### Constraints
+SQL> select conname, pg_get_constraintdef(oid) from pg_constraint where conrelid='servicos'::regclass order by conname;
+       conname       |      pg_get_constraintdef      
+---------------------+--------------------------------
+ ck_servicos_duracao | CHECK ((duracao_minutos > 0))
+ ck_servicos_preco   | CHECK ((preco > (0)::numeric))
+ servicos_pkey       | PRIMARY KEY (id)
+(3 rows)
+
+
+### Antes do PUT (id=1)
+SQL> select id, nome, preco, duracao_minutos, criado_em, atualizado_em from servicos where id=1;
+ id |             nome              | preco  | duracao_minutos |           criado_em           |         atualizado_em         
+----+-------------------------------+--------+-----------------+-------------------------------+-------------------------------
+  1 | Instalação de ar-condicionado | 350.00 |             120 | 2026-09-21 03:25:45.279681+00 | 2026-09-21 03:25:45.279651+00
+(1 row)
+
+
+### Depois do PUT (id=1): nome/preco/duracao alterados, criado_em igual, atualizado_em maior
+SQL> select id, nome, preco, duracao_minutos, criado_em, atualizado_em from servicos where id=1;
+ id |              nome               | preco  | duracao_minutos |           criado_em           |        atualizado_em         
+----+---------------------------------+--------+-----------------+-------------------------------+------------------------------
+  1 | Instalação de split 18.000 BTUs | 480.00 |             150 | 2026-09-21 03:25:45.279681+00 | 2026-09-21 03:25:50.06621+00
+(1 row)
+
+
+### Servico 2 inalterado apos PUT invalido
+SQL> select id, nome, preco, duracao_minutos, criado_em = atualizado_em as inalterado from servicos where id=2;
+ id |        nome         | preco  | duracao_minutos | inalterado 
+----+---------------------+--------+-----------------+------------
+  2 | Limpeza residencial | 120.50 |             180 | f
+(1 row)
+
+
+### Apos DELETE (id=2 ausente)
+SQL> select count(*) filter (where id=2) as linhas_id_excluido, count(*) as total from servicos;
+ linhas_id_excluido | total 
+--------------------+-------
+                  0 |     1
+(1 row)
+
+
+### Estado final
+SQL> select id, nome, preco, duracao_minutos from servicos order by id;
+ id |              nome               | preco  | duracao_minutos 
+----+---------------------------------+--------+-----------------
+  1 | Instalação de split 18.000 BTUs | 480.00 |             150
+  3 | ab                              |  10.00 |              60
+  4 | Duracao decimal                 |  10.00 |               1
+(3 rows)
+
+

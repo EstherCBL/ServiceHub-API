@@ -1,0 +1,7 @@
+/swagger-ui.html -> 302  0B redirect=http://localhost:8080/swagger-ui/index.html
+/swagger-ui/index.html -> 200 text/html 734B redirect=
+/v3/api-docs -> 200 application/json 7728B redirect=
+/v3/api-docs.yaml -> 200 application/vnd.oai.openapi 10000B redirect=
+/v3/api-docs/swagger-config -> 200 application/json 158B redirect=
+/swagger-ui/swagger-ui-bundle.js -> 200 text/javascript 1526763B redirect=
+/swagger-ui/swagger-ui.css -> 200 text/css 178890B redirect=
