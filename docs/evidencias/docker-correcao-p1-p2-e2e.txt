@@ -1,0 +1,80 @@
+### Antes (dados legados dos testes anteriores)
+ id |              nome               | duracao_minutos 
+----+---------------------------------+-----------------
+  1 | Instalação de split 18.000 BTUs |             150
+  3 | ab                              |              60
+  4 | Duracao decimal                 |               1
+(3 rows)
+
+
+==========
+[FIX-P1-POST] nome '  ab ' deve ser rejeitado
+Requisicao: POST /api/v1/servicos | args: -H Content-Type:application/json --data-binary @docker-corpos-requisicao/post-nome-espacos.json
+Esperado: 400  Obtido: 400  Resultado: PASS
+Corpo: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos","erros":[{"campo":"nome","mensagem":"O nome deve ter entre 3 e 100 caracteres"}]}
+==========
+[FIX-P1-PUT] PUT com nome '  ab ' deve ser rejeitado
+Requisicao: PUT /api/v1/servicos/1 | args: -H Content-Type:application/json --data-binary @docker-corpos-correcao-p1-p2/put-nome-curto.json
+Esperado: 400  Obtido: 400  Resultado: PASS
+Corpo: {"type":"about:blank","title":"Dados inválidos","status":400,"detail":"Um ou mais campos são inválidos","instance":"/api/v1/servicos/1","erros":[{"campo":"nome","mensagem":"O nome deve ter entre 3 e 100 caracteres"}]}
+==========
+[FIX-P2-POST] duracao 1.5 deve ser rejeitada
+Requisicao: POST /api/v1/servicos | args: -H Content-Type:application/json --data-binary @docker-corpos-requisicao/post-duracao-decimal.json
+Esperado: 400  Obtido: 400  Resultado: PASS
+Corpo: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos"}
+==========
+[FIX-P2-POST-120.0] duracao 120.0 tambem e rejeitada
+Requisicao: POST /api/v1/servicos | args: -H Content-Type:application/json --data-binary @docker-corpos-correcao-p1-p2/post-duracao-120-0.json
+Esperado: 400  Obtido: 400  Resultado: PASS
+Corpo: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos"}
+==========
+[FIX-P2-PUT] PUT com duracao 1.5 deve ser rejeitado
+Requisicao: PUT /api/v1/servicos/1 | args: -H Content-Type:application/json --data-binary @docker-corpos-correcao-p1-p2/put-duracao-decimal.json
+Esperado: 400  Obtido: 400  Resultado: PASS
+Corpo: {"type":"about:blank","title":"Corpo da requisição inválido","status":400,"detail":"O corpo da requisição está ausente ou não é um JSON válido","instance":"/api/v1/servicos/1"}
+==========
+[FIX-GET-1] serviço 1 permanece inalterado
+Requisicao: GET /api/v1/servicos/1 | args: 
+Esperado: 200  Obtido: 200  Resultado: PASS
+Corpo: {"id":1,"nome":"Instalação de split 18.000 BTUs","descricao":"Instalação completa com tubulação de até 5 metros","categoria":"Climatização","preco":480.00,"duracaoMinutos":150,"criadoEm":"2026-09-21T03:25:45.279681Z","atualizadoEm":"2026-09-21T03:25:50.066210Z"}
+==========
+[REG-POST-NORM] nome '  abc  ' e categoria '  Reformas  ' -> aceitos e normalizados
+Requisicao: POST /api/v1/servicos | args: -H Content-Type:application/json --data-binary @docker-corpos-correcao-p1-p2/post-normaliza.json
+Esperado: 201  Obtido: 201  Resultado: PASS
+Corpo: {"id":5,"nome":"abc","descricao":null,"categoria":"Reformas","preco":10,"duracaoMinutos":60,"criadoEm":"2026-09-21T03:57:15.781639Z","atualizadoEm":"2026-09-21T03:57:15.781612Z"}
+### Registro normalizado gravado (id=5)
+ id | nome  | categoria  | tam_nome 
+----+-------+------------+----------
+  5 | [abc] | [Reformas] |        3
+(1 row)
+
+
+==========
+[REG-POST-VALIDO] POST valido (regressao)
+Requisicao: POST /api/v1/servicos | args: -H Content-Type:application/json --data-binary @docker-corpos-requisicao/post-valido.json
+Esperado: 201  Obtido: 201  Resultado: PASS
+Corpo: {"id":6,"nome":"Instalação de ar-condicionado","descricao":"Instalação de split de até 12.000 BTUs","categoria":"Climatização","preco":350.00,"duracaoMinutos":120,"criadoEm":"2026-09-21T03:57:16.338749Z","atualizadoEm":"2026-09-21T03:57:16.338736Z"}
+==========
+[REG-DEL-1] DELETE do registro normalizado
+Requisicao: DELETE /api/v1/servicos/5 | args: 
+Esperado: 204  Obtido: 204  Resultado: PASS
+Corpo: 
+==========
+[REG-DEL-2] DELETE do registro valido
+Requisicao: DELETE /api/v1/servicos/6 | args: 
+Esperado: 204  Obtido: 204  Resultado: PASS
+Corpo: 
+==========
+[REG-GET-404] GET apos DELETE
+Requisicao: GET /api/v1/servicos/6 | args: 
+Esperado: 404  Obtido: 404  Resultado: PASS
+Corpo: {"type":"about:blank","title":"Recurso não encontrado","status":404,"detail":"Serviço com id 6 não encontrado","instance":"/api/v1/servicos/6"}
+### Depois: nenhum registro novo (esperado ids 1,3,4 de antes)
+ id |              nome               | duracao_minutos 
+----+---------------------------------+-----------------
+  1 | Instalação de split 18.000 BTUs |             150
+  3 | ab                              |              60
+  4 | Duracao decimal                 |               1
+(3 rows)
+
+

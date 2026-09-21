@@ -4,7 +4,9 @@
 > Todos os resultados abaixo foram observados nesta sessão. Onde algo **não** foi executado ou **não** pôde ser confirmado, isso está dito explicitamente.
 > Nenhuma senha ou credencial é reproduzida neste documento.
 >
-> **Atualização de 21/09/2026:** as seções 1–16 abaixo foram preservadas exatamente como escritas em 20/09/2026 e descrevem aquela execução (PostgreSQL portátil, `java -jar` no host). As limitações "Docker não instalado" e "`docker-compose.yml` não executado" citadas nelas foram tratadas na **seção 17** (validação com Docker), que também registra o que continua pendente.
+> **Atualização de 21/09/2026:** as seções 1–16 abaixo foram preservadas como escritas em 20/09/2026 e descrevem aquela execução (PostgreSQL portátil, `java -jar` no host); cada uma das seções 2, 12, 13, 14 e 15 traz um aviso do que mudou depois. A **seção 17** registra a validação com Docker e a correção dos defeitos P1 e P2, e lista o que continua pendente.
+>
+> **Estado atual (fim de 21/09/2026):** PostgreSQL e aplicação validados em Docker; **P1 e P2 corrigidos**; **41 testes automatizados, todos aprovados** (`.\mvnw.cmd -B clean test`, JDK 21.0.12); pendentes: P3, P4, P6, P7, divergências D1–D4 do OpenAPI e testes contra PostgreSQL real (seção 17.11).
 
 ---
 
@@ -27,6 +29,8 @@ Versões efetivamente empacotadas no JAR (`BOOT-INF/lib`): spring-webmvc 6.2.19,
 ---
 
 ## 2. Resumo executivo
+
+> **Atualização (21/09/2026):** o resumo abaixo é o de 20/09. Depois dele, o `docker-compose.yml` foi executado e validado, **P1 e P2 foram corrigidos** (a "Funcionalidades corrigidas: nenhuma" não vale mais) e a suíte passou de 27 para **41 testes** — ver seções 17.3 a 17.15.
 
 **O que foi analisado:** estrutura de diretórios, `pom.xml`, `application.properties`, `messages.properties`, migration Flyway, todas as classes Java de produção (10 arquivos) e de teste (2 classes), `docker-compose.yml`, `.env.example`, `.gitignore`, `README.md`.
 
@@ -484,7 +488,7 @@ Nenhuma dessas divergências foi corrigida (são melhorias de documentação, n�
 ## 11. Testes automatizados
 
 - **Existem:** `ServicoControllerTest` (integração, `@SpringBootTest` + `@AutoConfigureMockMvc` + perfil `test`/H2) e `ServicoServiceTest` (unitário, Mockito).
-- **Comando executado:** `.\mvnw.cmd -B clean test` (log: `mvn-test.log` no scratchpad da sessão; duração ≈ 59 s, incluindo download/compilação).
+- **Comando executado:** `.\mvnw.cmd -B clean test` (log em arquivo temporário da sessão, não versionado; duração ≈ 59 s, incluindo download/compilação).
 - **Resultado:** `Tests run: 27, Failures: 0, Errors: 0, Skipped: 0` — `BUILD SUCCESS`.
 
 | Classe / grupo | Testes | Falhas |
@@ -510,6 +514,8 @@ Nenhuma dessas divergências foi corrigida (são melhorias de documentação, n�
 ---
 
 ## 12. Problemas encontrados e correções
+
+> **Atualização (21/09/2026):** **P1 e P2 foram corrigidos** (com testes) — ver seção 17.14; a D5 deixou de se aplicar. P3, P4, P6, P7 e as divergências D1–D4 seguem como descritas abaixo; a P8 (limitações do ambiente) foi em parte superada, pois o Docker foi instalado e a extensão do Chrome passou a funcionar.
 
 **Nenhuma correção foi aplicada.** O código-fonte, os testes e as configurações do projeto permanecem exatamente como foram encontrados (nenhum arquivo existente foi editado; foram adicionados apenas este relatório e a pasta `docs/evidencias/`). Abaixo, cada problema com o status da causa.
 
@@ -554,6 +560,8 @@ Nenhuma dessas divergências foi corrigida (são melhorias de documentação, n�
 
 ## 13. Resultado geral da validação
 
+> **Atualização (21/09/2026):** o quadro abaixo é o de 20/09. O quadro atual está na seção 17.12 (Docker) e o estado dos defeitos P1/P2, na 17.14.
+
 | Pergunta | Resposta (com base em evidência desta sessão) |
 |---|---|
 | A aplicação iniciou? | **Sim** — 5,874 s, Tomcat na 8080, Flyway v1 aplicado, sem erros de inicialização |
@@ -571,6 +579,8 @@ Placar dos 86 testes HTTP: **85 `PASS`** (dos quais 4 são observações explora
 ---
 
 ## 14. Como executar o projeto
+
+> **Atualização (21/09/2026):** a "Opção A — Docker Compose" abaixo **foi executada e validada** (seção 17.3), e há instruções atualizadas, com `DB_PASSWORD` na linha de comando, no `README.md`. O Maven Wrapper também foi executado no Windows (17.13).
 
 ### Pré-requisitos
 JDK 21; PostgreSQL 16 (local **ou** Docker); Maven não precisa ser instalado (Maven Wrapper incluso).
@@ -629,6 +639,8 @@ curl -i -X POST http://localhost:8080/api/v1/servicos -H "Content-Type: applicat
 ---
 
 ## 15. Conclusão
+
+> **Atualização (21/09/2026):** a conclusão abaixo é a de 20/09. Desde então: `docker-compose.yml` validado, **P1 e P2 corrigidos**, **41 testes** aprovados. Continuam válidas as demais limitações e recomendações (P3, P4, P6, P7, D1–D4, testes com PostgreSQL real).
 
 O ServiceHub API está **funcional** no que se propõe: o CRUD do recurso `Serviços` compilou, iniciou e respondeu corretamente em PostgreSQL 16.4 real, com persistência confirmada por SQL, migration Flyway aplicada, restrições de banco eficazes, erros padronizados em Problem Details e Swagger/OpenAPI acessíveis e coerentes com a maior parte do comportamento. Os 27 testes automatizados passam.
 
@@ -909,7 +921,7 @@ Consultas via `docker exec servicehub-postgres psql -U servicehub -d servicehub 
 | # | Problema | Causa / evidência | Correção realizada |
 |---|---|---|---|
 | D-1 | `java` ausente no PATH do Windows | Nenhum `java.exe` encontrado no início da sessão | **Contornado** com a imagem `maven:3.9-eclipse-temurin-21` (sem alterar o sistema) |
-| D-2 | `docker compose ps` falhou sem `DB_PASSWORD` | O `docker-compose.yml` usa `${DB_PASSWORD:?...}` e o Compose interpola o arquivo em **todo** comando; a mensagem cita "arquivo .env" | **Nenhuma** (arquivo não alterado). **Recomendação:** ajustar a mensagem para citar também a variável de ambiente e documentar no README que `ps`/`down`/`logs` também precisam dela |
+| D-2 | `docker compose ps` falhou sem `DB_PASSWORD` | O `docker-compose.yml` usa `${DB_PASSWORD:?...}` e o Compose interpola o arquivo em **todo** comando; a mensagem cita "arquivo .env" | **Corrigido depois (mensagem e comentário de `docker-compose.yml`):** a mensagem agora diz "Defina DB_PASSWORD (arquivo .env ou variável de ambiente)". O `README.md` passou a documentar que todos os comandos do Compose exigem a variável. O comportamento (exigir a variável) não mudou |
 | D-3 | **P1** reconfirmado (`"  ab "` → 201, `nome = "ab"`) | OBS-P1 e SQL (id 3) | **Nenhuma** (ver seção 12 / P1) |
 | D-4 | **P2** reconfirmado (`1.5` → 201, gravado como `1`) | OBS-P2 e SQL (id 4) | **Nenhuma** (ver seção 12 / P2) |
 | D-5 | **P4** reconfirmado (POST devolve `10`, banco/GET `10.00`) | OBS-P1 × SQL | **Nenhuma** |
@@ -920,12 +932,12 @@ Consultas via `docker exec servicehub-postgres psql -U servicehub -d servicehub 
 **Correções realizadas nesta rodada:** **nenhuma** no código, nos testes ou nas configurações do projeto. Arquivos **adicionados**: `docs/evidencias/docker-evidencias-testes-http.txt`, `docker-resultados-testes-http.tsv`, `docker-verificacao-banco.txt`, `docker-swagger-urls.txt` e `docker-corpos-requisicao/` (12 arquivos JSON). Arquivo **alterado**: este relatório (aviso no topo e esta seção 17). O diretório `target/` (ignorado pelo Git) foi regenerado pelos contêineres.
 
 **Pendências restantes:**
-1. Corrigir/decidir P1 e P2 (e ajustar/adicionar testes); avaliar P3, P4, P6, P7 e as divergências D1–D5 (recomendações na seção 12).
+1. ~~Corrigir/decidir P1 e P2 (e ajustar/adicionar testes)~~ — **P1 e P2 foram corrigidos com testes em 21/09/2026 (seção 17.14).** Continuam pendentes: avaliar P3, P4, P6, P7 e as divergências D2–D4 (recomendações na seção 12); a D5 deixou de se aplicar com a correção do P1.
 2. Executar POST, PUT e DELETE pelo *Try it out* do Swagger, se essa evidência for exigida.
 3. Adicionar teste de integração com PostgreSQL (ex.: Testcontainers), já que os automatizados usam H2.
 4. Documentar no `README.md` a execução em Docker (`DB_PASSWORD` em todos os comandos do Compose, `DB_URL` com o nome do contêiner quando a aplicação também roda em contêiner).
-5. Decidir se os contêineres devem ser parados (`docker compose down`, **sem** `-v`, preserva os dados; `docker rm -f servicehub-app` remove o contêiner da aplicação) e limpar os dados de teste do banco (ids 1, 3 e 4).
-6. **Git:** nada foi commitado nem enviado; o relatório e `docs/evidencias/docker-*` aparecem como alterações/não rastreados.
+5. ~~Decidir se os contêineres devem ser parados~~ — **parados em 21/09/2026 (seção 17.14)**, sem remover o volume. Continua pendente limpar os dados de teste do banco (ids 1, 3 e 4).
+6. ~~**Git**~~ — resolvido em 21/09/2026 (seção 17.16): as correções de P1/P2 (que haviam ido parar no commit `6be3de9` do upgrade para Java 25) foram separadas em um commit próprio, e a documentação em outro, na branch `correcao-p1-p2`. Nenhum push foi feito.
 
 ### 17.12 Resultado geral da validação com Docker
 
@@ -976,7 +988,7 @@ Depois que o usuário instalou o JDK 21 no Windows, a pendência "executar o `mv
 | Item | Resultado |
 |---|---|
 | Comando | `.\mvnw.cmd -B test` (PowerShell, Windows 11) |
-| Java usado | 21.0.12 (log: `Starting ServicoControllerTest using Java 21.0.12 ... started by Sthe in C:\Projetos\Github\ServiceHub-API`) |
+| Java usado | 21.0.12 (log: `Starting ServicoControllerTest using Java 21.0.12`) |
 | Maven | distribuição `apache-maven-3.9.11` do wrapper (`~/.m2/wrapper/dists`) |
 | Código de saída | `0` |
 | Resultado | `Tests run: 27, Failures: 0, Errors: 0, Skipped: 0` — `BUILD SUCCESS` |
@@ -986,3 +998,104 @@ Depois que o usuário instalou o JDK 21 no Windows, a pendência "executar o `mv
 **Avisos no console (não são falhas):** o Mockito informando *self-attaching* do agente e o aviso do JVM sobre carregamento dinâmico de agente (`A Java agent has been loaded dynamically ... byte-buddy-agent-1.17.8.jar`), os mesmos citados na seção 11.
 
 **Limites desta verificação:** os testes continuam usando **H2**, então não exercitam o PostgreSQL. A **aplicação não foi iniciada** no Windows (`spring-boot:run` e `java -jar` no host seguem não executados nesta rodada, além do contêiner). O JAR em `target/` permaneceu o mesmo (gerado às 00:24) e o contêiner `servicehub-app` continuou respondendo `200` em `GET /api/v1/servicos` depois do teste. O log do Maven ficou no diretório temporário da sessão, **não** foi salvo em `docs/evidencias/`; as evidências desta execução são o resultado registrado aqui e os relatórios do Surefire em `target/surefire-reports/` (ignorado pelo Git).
+
+### 17.14 Correção de P1 e P2 (21/09/2026)
+
+A pedido do usuário, os defeitos **P1** e **P2** (seção 12) foram corrigidos, com testes. Esta é a primeira alteração de código-fonte da validação; as seções 12 e 17.7 permanecem como registro do estado **antes** da correção.
+
+**Correção realizada**
+
+| Defeito | Alteração | Por que resolve |
+|---|---|---|
+| **P1** — `"  ab "` passava pelo `@Size(min=3)` | `ServicoRequest`: novo **construtor compacto** que aplica `strip()` em `nome` e `categoria` (tolerando `null`); os `strip()` de `paraEntidade()` e `aplicarEm()` foram removidos por ficarem redundantes | O Jackson constrói o *record* pelo construtor canônico, então a normalização ocorre **antes** do Bean Validation e os limites de tamanho passam a valer para o texto que será gravado |
+| **P2** — `duracaoMinutos: 1.5` era truncado para `1` | `application.properties`: `spring.jackson.deserialization.accept-float-as-int=false` | O Jackson deixa de converter decimal em inteiro e o `HttpMessageNotReadableException` cai no tratamento já existente (400 "Corpo da requisição inválido") |
+
+**Mudanças de comportamento (intencionais e por consequência)**
+1. `nome` `"  ab "` → **400** "O nome deve ter entre 3 e 100 caracteres" (antes: 201 e gravado como `"ab"`).
+2. Nome **só com espaços** agora gera **2 erros** no campo `nome` (`@NotBlank` e `@Size`), como `""` já gerava; antes gerava só "O nome é obrigatório". Por isso o teste existente `rejeitaNomeEmBrancoEDuracaoInvalida` foi **ajustado** (de `containsInAnyOrder("nome","duracaoMinutos")` para `hasItems(...)` mais a checagem da mensagem "O nome é obrigatório").
+3. Os limites de tamanho valem para o texto **sem espaços nas bordas**: um `nome` de 100 caracteres cercado por espaços, antes recusado (400), passa a ser aceito.
+4. **Qualquer** número com parte decimal em `duracaoMinutos` é rejeitado, **inclusive `120.0`** (400). A mensagem é a genérica "Corpo da requisição inválido", sem indicar o campo (como nos demais erros de tipo).
+5. `descricao` **não** é normalizada (fora do escopo).
+
+**Testes**
+
+| Arquivo | Alteração |
+|---|---|
+| `src/test/java/com/servicehub/api/dto/ServicoRequestTest.java` (novo) | 6 testes unitários com `Validator`: normalização, `null`, `"  ab "` rejeitado, `"  abc "` aceito, 100 caracteres úteis aceitos, nome só com espaços |
+| `ServicoControllerTest` › POST | +6: `rejeitaNomeCurtoComEspacosNasBordas`, `normalizaNomeECategoria`, `aceitaNomeNoLimiteMaximoComEspacos`, `rejeitaCategoriaSoComEspacos`, `rejeitaDuracaoDecimal`, `rejeitaDuracaoDecimalInteira` |
+| `ServicoControllerTest` › PUT | +2: `atualizaComNomeCurtoEEspacosNasBordas`, `atualizaComDuracaoDecimal` (ambos conferem que o registro original não mudou) |
+| `ServicoControllerTest` › POST | 1 ajustado: `rejeitaNomeEmBrancoEDuracaoInvalida` (item 2 acima) |
+
+Total: **27 → 41 testes** (14 novos).
+
+**Prova de que os testes detectam os defeitos (red/green)**
+
+| Fase | Como | Resultado |
+|---|---|---|
+| **Red** | Código de produção **original** (commit `1b4e9a5`) + testes novos, em cópia isolada (`git worktree`), `.\mvnw.cmd -B test`, JDK 21 | `Tests run: 41, Failures: 9, Errors: 0` — falharam os 6 testes de controller `atualizaComNomeCurtoEEspacosNasBordas`, `atualizaComDuracaoDecimal`, `rejeitaDuracaoDecimalInteira`, `aceitaNomeNoLimiteMaximoComEspacos`, `rejeitaNomeCurtoComEspacosNasBordas`, `rejeitaDuracaoDecimal` e os 3 de `ServicoRequestTest` `normalizaTexto`, `aceitaNomeNoLimiteMaximoComEspacos`, `rejeitaNomeCurtoComEspacosNasBordas`. Os outros 32 passaram (servem de proteção contra regressão) |
+| **Green** | Código com as correções (commit `6be3de9` extraído por `git archive`), `.\mvnw.cmd -B test -Djava.version=21`, JDK 21 | `Tests run: 41, Failures: 0, Errors: 0, Skipped: 0` — `BUILD SUCCESS` (17,4 s) |
+
+**Confirmação de ponta a ponta no PostgreSQL** (JAR gerado da mesma extração, contêiner temporário `servicehub-app-fix` na porta 8081, mesmo banco): **11 cenários, 11 `PASS`** — `POST` `"  ab "` → 400; `PUT` com `"  ab "` → 400; `POST` `1.5` → 400; `POST` `120.0` → 400; `PUT` `1.5` → 400; serviço 1 inalterado (`GET` 200); `POST` `"  abc  "` / `"  Reformas  "` → 201, gravado como `abc` / `Reformas` (SQL: `[abc]`, `[Reformas]`, tamanho 3); `POST` válido → 201; `DELETE` → 204 (2 vezes); `GET` após o `DELETE` → 404. Os registros criados nesse teste foram excluídos ao final (SQL: continuam só os ids 1, 3 e 4, de antes). Evidências: `docs/evidencias/docker-correcao-p1-p2-testes.txt`, `docker-correcao-p1-p2-e2e.txt`, `docker-correcao-p1-p2-e2e.tsv` e `docker-corpos-correcao-p1-p2/`.
+
+**Problemas encontrados durante esta correção**
+1. **Build concorrente no mesmo diretório.** Enquanto eu validava, uma ferramenta de upgrade para **Java 25** (extensão do VS Code, branch `appmod/java-upgrade-20260921034935`) compilava e limpava o `target/` do próprio projeto. Isso derrubou a minha primeira tentativa de *red* (`ServicoControllerTest.class ... does not exist`) e uma tentativa de *green* (`class file version 69.0` — compilado por JDK 25 — não roda no JDK 21), e apagou o JAR de `target/`. **Esses resultados foram descartados.** A primeira tentativa de *red* usou `git stash` **no diretório real** (guardando por instantes as duas alterações de produção e restaurando-as com `git stash pop`, que concluiu sem conflito e sem deixar stash); foi um erro de método, já que a pasta estava em uso por outra ferramenta. O red e o green válidos foram refeitos em pastas isoladas (worktree e extração por `git archive`), sem tocar em `target/`.
+2. **As correções de P1/P2 entraram no commit `6be3de9`** ("Step 4: Upgrade to Java 25"), criado automaticamente pela ferramenta: ela incluiu os 4 arquivos que eu havia alterado (`ServicoRequest.java`, `application.properties`, `ServicoControllerTest.java`, `ServicoRequestTest.java`) junto com a mudança do `pom.xml` (`java.version` 21 → 25). O conteúdo está correto, mas **misturado** com o upgrade. Não reescrevi o histórico.
+3. **Não executei os testes em JDK 25.** O texto do commit `6be3de9` afirma "Tests: 100% passed", mas essa execução foi da ferramenta e não foi verificada por mim. Todas as execuções desta seção usaram o JDK 21 (com `-Djava.version=21` sobre o `pom.xml`, que já pede 25).
+4. **Dados legados.** A correção não é retroativa: os registros `id 3` (`nome = "ab"`) e `id 4` (`duracao_minutos = 1`), criados antes dela, continuam no banco (volume preservado).
+5. O `mvnw` extraído por `git archive` veio com finais de linha CRLF e não roda em Linux; o JAR do teste de ponta a ponta foi gerado com o `mvn` da imagem `maven:3.9-eclipse-temurin-21`.
+
+**Não executado:** `.\mvnw.cmd test` no diretório de trabalho real depois da correção (bloqueado pelo build concorrente); testes em JDK 25; Swagger/OpenAPI após a correção (o `minLength: 3` do `nome`, que a D5 apontava como contrariado, agora é honrado pela API, mas o JSON de `/v3/api-docs` não foi regerado).
+
+**Contêineres:** ao final, `servicehub-app-fix` (temporário) foi **removido**; `servicehub-app` e `servicehub-postgres` foram **parados** (`docker stop`), sem `docker compose down` e **sem apagar volumes** — o volume `servicehub-api_servicehub-pgdata` (e o cache `servicehub-m2`) foi preservado. As portas 5432, 8080 e 8081 estão livres.
+
+### 17.15 Retorno ao Java 21, teste final e atualização do README (21/09/2026)
+
+O usuário informou que o upgrade para Java 25 terminou e autorizou voltar ao Java 21.
+
+**O que foi desfeito e o que foi mantido.** Entre o commit `1b4e9a5` e o `6be3de9` (upgrade), a **única** alteração que não era minha foi `pom.xml`: `<java.version>21</java.version>` → `25`. Ela foi revertida **no diretório de trabalho** (`java.version` voltou a `21`), sem commit naquele momento; a branch `appmod/java-upgrade-20260921034935` continua com o `25` em `6be3de9`. As correções de P1/P2 (17.14) foram mantidas. O destino final dessas alterações está na seção 17.16.
+
+**Teste final no diretório real** (Windows, JDK 21.0.12, Maven 3.9.11 do wrapper, `target/` recompilado do zero):
+
+| Item | Resultado |
+|---|---|
+| Comando | `.\mvnw.cmd -B clean test` |
+| Compilação | `Compiling 10 source files ... release 21` (produção) e `3 source files ... release 21` (testes) |
+| Resultado | `Tests run: 41, Failures: 0, Errors: 0, Skipped: 0` — `BUILD SUCCESS` — `Total time: 12.777 s`, código de saída 0 |
+| Por classe | `ServicoControllerTest` 31 (POST 14, GET 5, PUT 5, DELETE 3, erros genéricos 3, OpenAPI 1), `ServicoRequestTest` 6, `ServicoServiceTest` 4 |
+
+Isso fecha o item "`.\mvnw.cmd test` no diretório de trabalho real depois da correção" listado como não executado na seção 17.14. **Continua não executado:** teste em JDK 25 (o "100% passed" do commit `6be3de9` é da ferramenta, não verificado por mim), regeração do `/v3/api-docs` após a correção e nova bateria HTTP completa. O log desta execução ficou no diretório temporário da sessão (não versionado); a evidência é o resultado registrado aqui.
+
+**Observação sobre contagens:** os "27 testes" das seções 17.1, 17.5, 17.12 e 17.13 descrevem o estado **anterior** à correção de P1/P2; o total atual é **41**.
+
+**Verificação adicional do Compose:** `docker compose stop` e `docker compose down` **sem** `DB_PASSWORD` também falham com `required variable DB_PASSWORD is missing a value` (antes só o `ps` havia sido testado). Um `docker compose down --dry-run` (sem remover nada) listou apenas o contêiner e a rede, não o volume.
+
+**README atualizado** (`README.md`), para a apresentação:
+- Docker Compose: passos com e sem `.env`, obrigatoriedade de `DB_PASSWORD` em todos os comandos, healthcheck, `stop`/`down` e a diferença para `down -v`; a nota "não foi executado" foi trocada pelo que foi validado (Docker 29.8.0, Compose v5.5.1, PostgreSQL 16.15) e foi acrescentado o `DB_URL` para a aplicação em contêiner.
+- Regras do recurso: `nome` e `categoria` sem espaços nas bordas, limites reais de `preco` e `duracaoMinutos`, decimal rejeitado.
+- Decisões de design (normalização antes da validação; tipos estritos), dois exemplos de erro `400` reais e a tabela de testes com **41 testes** (31 + 6 + 4).
+- Nova seção "Validação realizada", com link para este relatório, e limitações atualizadas (OpenAPI sem `405/406/415/500`, escala do preço, Swagger habilitado por padrão, ~30 s até o `500` com o banco fora).
+- Mantidos sem alteração: as imagens de `docs/img/` e a frase sobre o *Try it out* do `POST` no Swagger UI. **Não reproduzi** esse `POST` pelo Swagger (só o `GET`, seção 17.9); a afirmação é do autor do projeto.
+
+### 17.16 Análise final, limpeza e commits (21/09/2026)
+
+**Análise final dos arquivos do projeto.** Foram revisados: `README.md`, este relatório, `docs/` (evidências, imagens e o PPTX), `docker-compose.yml`, `.env.example`, `.gitignore`, `pom.xml`, `application.properties`, `messages.properties`, a migration e todas as classes Java, de produção e de teste.
+
+**Limpeza feita**
+
+| Item | Antes | Depois |
+|---|---|---|
+| Caminhos locais e nome de usuário do Windows em `docs/evidencias/` (22 ocorrências nos comandos `curl`) e neste relatório (2) | `@C:/Users/<usuário>/AppData/.../scratchpad/bodies/...` | Caminhos relativos às pastas de corpos versionadas (`docker-corpos-requisicao/`, `docker-corpos-correcao-p1-p2/`); conferido que **todos** os arquivos referenciados existem |
+| Seções 2, 12, 13, 14 e 15 (texto de 20/09 em conflito com a seção 17) | Diziam "nenhuma correção", "Docker não executado", "27 testes" | Texto original **preservado**, com um aviso de atualização no início de cada seção; o cabeçalho do relatório ganhou o "Estado atual" |
+| `docker-compose.yml` | A mensagem de erro citava só o arquivo `.env` | Cita também a variável de ambiente; o comportamento não mudou (validado com `docker compose config`, com e sem `DB_PASSWORD`) |
+
+**Código:** revisado; **nada foi removido**. Não há import sem uso (verificado por script), e todos os getters, setters e métodos de conversão são usados. As únicas adições desta validação são o construtor compacto de `ServicoRequest` (necessário para o P1) e uma propriedade do Jackson (necessária para o P2). O bean `ordenarCaminhos` de `OpenApiConfig` só define a ordem de exibição dos caminhos no Swagger; foi mantido por não ser possível dizer, sem testar, como o Swagger UI ficaria sem ele.
+
+**Encontrado e deliberadamente não alterado**
+- `docs/ServiceHub-API-Checkpoint.pptx` está desatualizado nos slides 9 e 10 ("27 testes", "23 de integração e 4 unitários", "PostgreSQL 16.4"); hoje são **41 testes** (31 + 6 + 4) e o banco foi validado em Docker com o PostgreSQL 16.15. O arquivo não foi editado.
+- `.github/modernize/` (plano, progresso, logs e *hooks* da ferramenta de upgrade para Java 25) existe só no disco: o `.gitignore` interno da pasta o exclui do Git. Não foi apagado.
+
+**Commits** (branch **`correcao-p1-p2`**, criada a partir do commit do usuário `1b4e9a5`; nada foi enviado ao remoto)
+1. `d54c56a` — *Corrige validação do nome com espaços (P1) e duração decimal (P2)*: só `ServicoRequest.java`, `application.properties` e os testes. Verificado **isoladamente** (extração por `git archive`, `.\mvnw.cmd -B test`, JDK 21, sem `-D`): **41 testes, 0 falhas, `BUILD SUCCESS`**.
+2. Commit de documentação: `README.md`, este relatório, `docker-compose.yml` e `docs/evidencias/`.
+
+O `pom.xml` desta branch é o mesmo de `1b4e9a5` (`java.version` = **21**), por isso não há commit de pom. A branch `appmod/java-upgrade-20260921034935` **não foi alterada** e mantém o commit `6be3de9` (Java 25).
