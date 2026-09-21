@@ -1,0 +1,38 @@
+# Correcao de P1 e P2 - resultado dos testes automatizados (Windows, JDK 21, .\mvnw.cmd -B test)
+
+## RED: codigo de producao ORIGINAL (commit 1b4e9a5) + testes novos, em copia isolada (git worktree)
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.621 s -- in Documentação OpenAPI
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.075 s -- in Erros genéricos do Spring MVC
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.253 s -- in DELETE /api/v1/servicos/{id}
+[ERROR] Tests run: 5, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.119 s <<< FAILURE! -- in PUT /api/v1/servicos/{id}
+[ERROR] com.servicehub.api.controller.ServicoControllerTest.atualizaComNomeCurtoEEspacosNasBordas -- Time elapsed: 0.018 s <<< FAILURE!
+[ERROR] com.servicehub.api.controller.ServicoControllerTest.atualizaComDuracaoDecimal -- Time elapsed: 0.017 s <<< FAILURE!
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.100 s -- in GET /api/v1/servicos
+[ERROR] Tests run: 14, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.396 s <<< FAILURE! -- in POST /api/v1/servicos
+[ERROR] com.servicehub.api.controller.ServicoControllerTest.rejeitaDuracaoDecimalInteira -- Time elapsed: 0.010 s <<< FAILURE!
+[ERROR] com.servicehub.api.controller.ServicoControllerTest.aceitaNomeNoLimiteMaximoComEspacos -- Time elapsed: 0.006 s <<< FAILURE!
+[ERROR] com.servicehub.api.controller.ServicoControllerTest.rejeitaNomeCurtoComEspacosNasBordas -- Time elapsed: 0.010 s <<< FAILURE!
+[ERROR] com.servicehub.api.controller.ServicoControllerTest.rejeitaDuracaoDecimal -- Time elapsed: 0.009 s <<< FAILURE!
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.136 s -- in com.servicehub.api.controller.ServicoControllerTest
+[ERROR] Tests run: 6, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.129 s <<< FAILURE! -- in com.servicehub.api.dto.ServicoRequestTest
+[ERROR] com.servicehub.api.dto.ServicoRequestTest.normalizaTexto -- Time elapsed: 0.006 s <<< FAILURE!
+[ERROR] com.servicehub.api.dto.ServicoRequestTest.aceitaNomeNoLimiteMaximoComEspacos -- Time elapsed: 0.006 s <<< FAILURE!
+[ERROR] com.servicehub.api.dto.ServicoRequestTest.rejeitaNomeCurtoComEspacosNasBordas -- Time elapsed: 0.001 s <<< FAILURE!
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.392 s -- in com.servicehub.api.service.ServicoServiceTest
+[ERROR] Tests run: 41, Failures: 9, Errors: 0, Skipped: 0
+[INFO] BUILD FAILURE
+[INFO] Total time:  13.982 s
+
+## GREEN: com as correcoes (commit 6be3de9 extraido com git archive; -Djava.version=21)
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.110 s -- in Documentação OpenAPI
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.076 s -- in Erros genéricos do Spring MVC
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.248 s -- in DELETE /api/v1/servicos/{id}
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.134 s -- in PUT /api/v1/servicos/{id}
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.143 s -- in GET /api/v1/servicos
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.948 s -- in POST /api/v1/servicos
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.273 s -- in com.servicehub.api.controller.ServicoControllerTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.230 s -- in com.servicehub.api.dto.ServicoRequestTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.611 s -- in com.servicehub.api.service.ServicoServiceTest
+[INFO] Tests run: 41, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+[INFO] Total time:  17.428 s

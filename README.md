@@ -19,6 +19,7 @@ recurso **Serviços** com CRUD completo, persistência em PostgreSQL e documenta
 | SpringDoc OpenAPI 2.8 | Geração do OpenAPI e do Swagger UI |
 | JUnit 5, MockMvc, Mockito, H2 | Testes automatizados |
 | Maven (com Maven Wrapper) | Build e dependências |
+| Docker Compose | PostgreSQL local para desenvolvimento (opcional) |
 
 ## Arquitetura
 
@@ -43,7 +44,7 @@ src/main/resources/db/migration/V1__criar_tabela_servicos.sql
 
 ## Pré-requisitos
 
-- **JDK 21** (`java -version`)
+- **JDK 21** (`java -version`); o projeto foi compilado e testado com o JDK 21.0.12
 - **PostgreSQL 16** (instalado localmente **ou** via Docker Compose, veja abaixo)
 - Não é necessário instalar o Maven: o projeto inclui o Maven Wrapper (`mvnw` / `mvnw.cmd`).
 
@@ -59,16 +60,38 @@ A aplicação lê a conexão de **variáveis de ambiente** (nenhuma senha fica n
 
 ### Opção A — Docker Compose (recomendada para desenvolvimento)
 
+Com um arquivo `.env` (copie o modelo e defina `DB_PASSWORD`):
+
 ```bash
 cp .env.example .env        # edite o .env e defina DB_PASSWORD
 docker compose up -d
 ```
 
-O Compose cria o banco `servicehub` com o usuário e a senha definidos no `.env`.
+Ou, sem criar o `.env`, passando a senha só na linha de comando:
 
-> Nota: o `docker-compose.yml` foi escrito seguindo a documentação oficial da imagem `postgres`, mas **não foi
-> executado** no ambiente em que o projeto foi desenvolvido (sem Docker). A validação com PostgreSQL foi feita
-> com um servidor PostgreSQL 16.4 local.
+```powershell
+$env:DB_PASSWORD = "sua-senha"; docker compose up -d      # PowerShell
+```
+
+```bash
+DB_PASSWORD=sua-senha docker compose up -d                # Linux / macOS / Git Bash
+```
+
+O Compose cria o banco `servicehub` (usuário `servicehub`) com a senha informada. O contêiner possui healthcheck
+(`pg_isready`): confira com `docker compose ps` e aguarde o status `healthy` antes de iniciar a aplicação.
+
+> **Atenção:** o `docker-compose.yml` exige `DB_PASSWORD` em **todos** os comandos `docker compose` (`up`, `ps`,
+> `stop`, `down`...), mesmo os que não usam a senha. Sem ela, o Compose recusa o comando.
+
+Para parar: `docker compose stop`. O comando `docker compose down` remove os contêineres mas **preserva os dados**
+(volume `servicehub-pgdata`); só `docker compose down -v` apaga os dados.
+
+> Validado em execução real: Docker 29.8.0, Docker Compose v5.5.1, imagem `postgres:16` (PostgreSQL 16.15),
+> healthcheck `healthy` e aplicação conectada, com a migration Flyway `V1` aplicada.
+
+> Se a **aplicação** também rodar em um contêiner, aponte o `DB_URL` para o nome do contêiner do banco
+> (`jdbc:postgresql://servicehub-postgres:5432/servicehub`) e use a mesma rede do Compose: dentro do contêiner,
+> `localhost` é o próprio contêiner da aplicação.
 
 ### Opção B — PostgreSQL já instalado
 
@@ -118,11 +141,11 @@ os DTOs possuem `@Schema` com descrições e exemplos.
 | Campo | Tipo | Regras |
 |---|---|---|
 | `id` | Long | Gerado pelo banco |
-| `nome` | String | Obrigatório, 3 a 100 caracteres |
+| `nome` | String | Obrigatório, 3 a 100 caracteres **depois de remover os espaços das bordas** |
 | `descricao` | String | Opcional, até 500 caracteres |
-| `categoria` | String | Obrigatória, até 60 caracteres |
-| `preco` | Decimal | Obrigatório, > 0, até 2 casas decimais |
-| `duracaoMinutos` | Inteiro | Obrigatório, >= 1 |
+| `categoria` | String | Obrigatória, até 60 caracteres (espaços das bordas removidos) |
+| `preco` | Decimal | Obrigatório, de 0,01 a 99.999.999,99, até 2 casas decimais |
+| `duracaoMinutos` | Inteiro | Obrigatório, de 1 a 100.000. Número decimal (ex.: `1.5` ou `120.0`) é rejeitado com `400` |
 | `criadoEm` / `atualizadoEm` | Data/hora (UTC) | Geradas pela API |
 
 ## Endpoints
@@ -142,6 +165,11 @@ Decisões de design:
 - Os erros seguem o padrão **Problem Details (RFC 9457)**, com `Content-Type: application/problem+json`, e as
   mensagens estão em português. Erros de validação trazem a lista `erros` com `campo` e `mensagem`.
 - Rotas inexistentes retornam `404` e métodos não suportados retornam `405` (com o cabeçalho `Allow`).
+- **Normalização antes da validação:** os espaços das bordas de `nome` e `categoria` são removidos assim que o
+  corpo é lido, antes do Bean Validation. Assim, `"  ab "` é rejeitado (2 caracteres úteis) e `"  abc  "` é
+  gravado como `"abc"`. Um nome só com espaços gera dois erros no campo `nome` (obrigatório e tamanho mínimo).
+- **Tipos estritos:** `duracaoMinutos` não aceita número decimal (`spring.jackson.deserialization.accept-float-as-int=false`);
+  o valor não é truncado em silêncio, a API responde `400`.
 
 ## Exemplos de requisições
 
@@ -195,6 +223,33 @@ curl -i -X PUT http://localhost:8080/api/v1/servicos/1 \
 }
 ```
 
+**Nome curto com espaços nas bordas — `400 Bad Request`** (`POST` com `"nome": "  ab "`)
+
+```json
+{
+  "type": "about:blank",
+  "title": "Dados inválidos",
+  "status": 400,
+  "detail": "Um ou mais campos são inválidos",
+  "instance": "/api/v1/servicos",
+  "erros": [
+    { "campo": "nome", "mensagem": "O nome deve ter entre 3 e 100 caracteres" }
+  ]
+}
+```
+
+**Duração decimal — `400 Bad Request`** (`POST` com `"duracaoMinutos": 1.5`)
+
+```json
+{
+  "type": "about:blank",
+  "title": "Corpo da requisição inválido",
+  "status": 400,
+  "detail": "O corpo da requisição está ausente ou não é um JSON válido",
+  "instance": "/api/v1/servicos"
+}
+```
+
 **Não encontrado — `404 Not Found`** (`GET /api/v1/servicos/99`)
 
 ```json
@@ -220,12 +275,29 @@ curl -i -X PUT http://localhost:8080/api/v1/servicos/1 \
 Os testes **não precisam de PostgreSQL nem de Docker**: usam o perfil `test`, com banco **H2 em memória** (modo
 PostgreSQL). O Flyway executa a mesma migration e o Hibernate valida o esquema.
 
-| Classe | Tipo | Cobertura |
-|---|---|---|
-| `ServicoControllerTest` | Integração (MockMvc + banco) | CRUD completo, `201/200/204/400/404/405/415`, validações, formato dos erros e presença de summary/description no OpenAPI |
-| `ServicoServiceTest` | Unitário (Mockito) | Normalização de texto e exceções de recurso inexistente |
+| Classe | Tipo | Testes | Cobertura |
+|---|---|---|---|
+| `ServicoControllerTest` | Integração (MockMvc + banco) | 31 | CRUD completo, `201/200/204/400/404/405/415`, validações, formato dos erros, normalização de nome/categoria, rejeição de duração decimal e presença de summary/description no OpenAPI |
+| `ServicoRequestTest` | Unitário (Bean Validation) | 6 | Remoção de espaços das bordas, valores nulos e limites de tamanho do nome |
+| `ServicoServiceTest` | Unitário (Mockito) | 4 | Normalização de texto e exceções de recurso inexistente |
 
-Resultado da última execução: **27 testes, 0 falhas, 0 erros, 0 ignorados**.
+Resultado da última execução (`.\mvnw.cmd -B clean test`, Windows, JDK 21.0.12): **41 testes, 0 falhas, 0 erros,
+0 ignorados**.
+
+## Validação realizada
+
+Além dos testes automatizados, a API foi validada em execução real contra o PostgreSQL rodando em Docker:
+
+- **Docker e banco:** `docker compose up -d`, healthcheck `healthy`, aplicação conectada e migration `V1` aplicada.
+- **CRUD por HTTP** (`curl`): `POST`, `GET` (lista e por ID), `PUT`, `DELETE` e casos de erro (`400`, `404`, `405`, `415`),
+  com conferência direta no banco por SQL após cada operação.
+- **Swagger:** `/swagger-ui.html`, `/swagger-ui/index.html` e `/v3/api-docs` acessíveis; endpoints, summaries,
+  parâmetros, corpos, status e schemas conferidos.
+- **Correções feitas a partir da validação:** nome com espaços nas bordas burlava o tamanho mínimo e duração
+  decimal era truncada em silêncio; ambos foram corrigidos e cobertos por testes.
+
+O detalhe de cada teste (requisição, resposta, evidências e problemas encontrados) está em
+[`RELATORIO_TECNICO_TESTES.md`](RELATORIO_TECNICO_TESTES.md), e as evidências brutas em `docs/evidencias/`.
 
 ## Limitações conhecidas
 
@@ -233,4 +305,9 @@ Resultado da última execução: **27 testes, 0 falhas, 0 erros, 0 ignorados**.
 - A listagem não é paginada e não possui filtros.
 - Os testes automatizados usam H2; o comportamento com PostgreSQL foi verificado manualmente (aplicação em
   execução, chamadas HTTP e consultas SQL diretas).
-- O `docker-compose.yml` não foi executado no ambiente de desenvolvimento (sem Docker instalado).
+- A documentação OpenAPI não descreve os erros `405`, `406`, `415` e `500` (só `200/201/204/400/404`), e o schema
+  `ProblemDetail` não mostra a lista `erros` (ela aparece apenas nos exemplos).
+- A resposta do `POST`/`PUT` pode trazer o preço sem zeros à direita (`10`), enquanto o `GET` traz `10.00`
+  (mesmo valor, formatação diferente).
+- O Swagger UI e o `/v3/api-docs` ficam habilitados por padrão; em produção devem ser desabilitados ou protegidos.
+- Se o banco estiver fora do ar, a API leva cerca de 30 s para responder `500` (tempo padrão do pool de conexões).

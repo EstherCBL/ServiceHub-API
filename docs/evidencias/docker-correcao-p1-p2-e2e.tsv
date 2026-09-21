@@ -1,0 +1,12 @@
+ID	Metodo	URL	Esperado	Obtido	Resultado
+FIX-P1-POST	POST	/api/v1/servicos	400	400	PASS
+FIX-P1-PUT	PUT	/api/v1/servicos/1	400	400	PASS
+FIX-P2-POST	POST	/api/v1/servicos	400	400	PASS
+FIX-P2-POST-120.0	POST	/api/v1/servicos	400	400	PASS
+FIX-P2-PUT	PUT	/api/v1/servicos/1	400	400	PASS
+FIX-GET-1	GET	/api/v1/servicos/1	200	200	PASS
+REG-POST-NORM	POST	/api/v1/servicos	201	201	PASS
+REG-POST-VALIDO	POST	/api/v1/servicos	201	201	PASS
+REG-DEL-1	DELETE	/api/v1/servicos/5	204	204	PASS
+REG-DEL-2	DELETE	/api/v1/servicos/6	204	204	PASS
+REG-GET-404	GET	/api/v1/servicos/6	404	404	PASS
